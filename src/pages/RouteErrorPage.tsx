@@ -8,7 +8,7 @@ const RouteErrorPage: React.FC = () => {
   console.error(error);
 
   return (
-    <main className="flex h-full flex-col items-center justify-center text-theme-extra-dark-gray">
+    <main className="flex flex-1 flex-col items-center justify-center px-4 py-6 text-center text-theme-extra-dark-gray">
       <div className="mb-12">
         <img
           alt="broken link icon"

@@ -2,12 +2,12 @@ import { StartPageButton } from '../components';
 
 const StartPage: React.FC = () => {
   return (
-    <main className="flex h-full flex-col items-center justify-around text-center text-theme-dark-gray">
-      <div className="w-[calc(100%-4rem)] max-w-7xl">
+    <main className="flex flex-1 flex-col items-center gap-[12vh] px-4 py-6 text-center text-theme-dark-gray md:justify-center">
+      <div className="w-full max-w-7xl">
         <h1 className="text-small-title md:border-b md:border-b-theme-light-gray md:pb-[5vh] md:text-title">
           Maths
         </h1>
-        <div className="mt-[3vh] grid w-full grid-cols-2 gap-4 md:flex md:justify-between md:gap-[1vw]">
+        <div className="mt-[3vh] grid w-full grid-cols-2 gap-[2vh] md:flex md:justify-between md:gap-[1vw]">
           <StartPageButton
             icon="icon_start.svg"
             color="blue"
@@ -36,7 +36,7 @@ const StartPage: React.FC = () => {
       <img
         alt="logo"
         src="images/logo.svg"
-        className="bottom-4 w-1/2 md:absolute md:bottom-[1vw] md:left-[1vw] md:w-2/12"
+        className="bottom-4 mt-auto w-1/2 md:absolute md:bottom-[1vw] md:left-[1vw] md:w-[10%]"
       />
     </main>
   );
