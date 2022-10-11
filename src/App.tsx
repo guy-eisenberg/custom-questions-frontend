@@ -1,5 +1,14 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
-import { ExamTypePage, RouteErrorPage, RunPage, StartPage } from './pages';
+import {
+  CustomizationPage,
+  ExamTypePage,
+  RouteErrorPage,
+  RunPage,
+  StartPage,
+} from './pages';
+import { store } from './redux';
 
 const router = createHashRouter([
   {
@@ -9,24 +18,37 @@ const router = createHashRouter([
     errorElement: <RouteErrorPage />,
   },
   {
-    path: '/:activityId',
+    path: '/:examId',
     element: <StartPage />,
     errorElement: <RouteErrorPage />,
   },
   {
-    path: '/:activityId/select-type',
+    path: '/:examId/select-type',
     element: <ExamTypePage />,
     errorElement: <RouteErrorPage />,
   },
   {
-    path: '/:activityId/run',
+    path: '/:examId/customize',
+    element: <CustomizationPage />,
+    errorElement: <RouteErrorPage />,
+  },
+  {
+    path: '/:examId/run',
     element: <RunPage />,
     errorElement: <RouteErrorPage />,
   },
 ]);
 
+const queryClient = new QueryClient();
+
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>
+    </QueryClientProvider>
+  );
 }
 
 export default App;

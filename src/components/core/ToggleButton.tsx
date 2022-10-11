@@ -1,33 +1,57 @@
 import { c } from '../../lib';
 
 interface ToggleButtonProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  color: 'blue' | 'green';
+  isChecked: boolean;
+  textColor?: string;
+  upperCase?: boolean;
+  onToggle?: (toggled: boolean) => void;
+}
 
-const ToggleButton: React.FC<ToggleButtonProps> = ({ checked, ...rest }) => {
+const ToggleButton: React.FC<ToggleButtonProps> = ({
+  color,
+  isChecked,
+  textColor,
+  upperCase = false,
+  onToggle,
+  ...rest
+}) => {
+  var label = isChecked ? 'On' : 'Off';
+  if (upperCase) label = label.toUpperCase();
+
   return (
-    <label
-      htmlFor="checked-toggle"
-      className="relative inline-flex cursor-pointer items-center"
+    <button
+      {...rest}
+      className={c(
+        "relative h-7 w-[65px] rounded-full bg-white after:absolute after:top-1/2 after:h-[85%] after:w-7 after:-translate-y-1/2 after:rounded-full after:transition-all after:content-['']",
+        isChecked
+          ? 'after:left-[calc(100%-2px)] after:-translate-x-full'
+          : 'after:left-[2px]',
+        color === 'blue' && 'after:bg-theme-dark-blue',
+        color === 'green' && 'after:bg-[#74d73c]',
+        rest.className
+      )}
+      onClick={(e) => {
+        if (rest.onClick) rest.onClick(e);
+
+        if (onToggle) onToggle(!isChecked);
+      }}
     >
-      <input
-        {...rest}
-        type="checkbox"
-        value=""
-        id="checked-toggle"
-        className="peer sr-only"
-        checked={checked}
-      />
-      <div className="peer relative h-7 w-[60px] rounded-full bg-white after:absolute after:top-0.5 after:left-[2px] after:h-6 after:w-7 after:rounded-full after:border after:bg-[#1b8ac0] after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white">
-        <span
-          className={c(
-            'absolute top-1/2 -translate-y-1/2 select-none text-xs text-[#1b8ac0] transition-all',
-            checked ? 'left-2' : 'left-[calc(100%-8px)] -translate-x-full'
-          )}
-        >
-          {checked ? 'On' : 'Off'}
-        </span>
-      </div>
-    </label>
+      <span
+        className={c(
+          'absolute top-1/2 -translate-y-1/2 select-none text-xs transition-all',
+          color === 'blue' && 'text-theme-dark-blue',
+          color === 'green' && 'text-[#74d73c]',
+          isChecked ? 'left-2' : 'left-[calc(100%-8px)] -translate-x-full'
+        )}
+        style={{
+          color: textColor,
+        }}
+      >
+        {label}
+      </span>
+    </button>
   );
 };
 

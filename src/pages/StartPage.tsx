@@ -1,27 +1,53 @@
-import { StartPageButton } from '../components';
+import { useNavigate } from 'react-router-dom';
+import { LoadingScreen, StartPageButton } from '../components';
+import { useDispatch, useExam } from '../hooks';
+import { setTrainingMode } from '../redux';
 
 const StartPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const { status, exam, error } = useExam();
+
+  const dispatch = useDispatch();
+
+  if (status === 'loading' || !exam) return <LoadingScreen />;
+
+  if (status === 'error' || error)
+    throw new Error(`Error fetching exam: ${error}`);
+
   return (
     <main className="flex flex-1 flex-col items-center gap-[12vh] px-4 py-6 text-center text-theme-dark-gray md:justify-center">
       <div className="w-full max-w-7xl">
         <h1 className="text-small-title md:border-b md:border-b-theme-light-gray md:pb-[5vh] md:text-title">
-          Maths
+          {exam.name}
         </h1>
         <div className="mt-[3vh] grid w-full grid-cols-2 gap-[2vh] md:flex md:justify-between md:gap-[1vw]">
           <StartPageButton
             icon="icon_start.svg"
             color="blue"
             className="flex-1"
+            onClick={() => {
+              dispatch(setTrainingMode(false));
+
+              navigate('select-type');
+            }}
           >
             Start Activity
           </StartPageButton>
-          <StartPageButton
-            icon="icon_mortarboard.svg"
-            color="green"
-            className="flex-1"
-          >
-            Training Mode
-          </StartPageButton>
+          {exam.training_mode && (
+            <StartPageButton
+              icon="icon_mortarboard.svg"
+              color="green"
+              className="flex-1"
+              onClick={() => {
+                dispatch(setTrainingMode(true));
+
+                navigate('select-type');
+              }}
+            >
+              Training Mode
+            </StartPageButton>
+          )}
           <StartPageButton icon="icon_performance.svg" className="flex-1">
             Performance
           </StartPageButton>
