@@ -1,23 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { ExamTypePageButton, LoadingScreen } from '../components';
-import { useDispatch, useExam, useParams } from '../hooks';
-import { ActivityMode, setMode } from '../redux';
+import { ExamTypePageButton } from '../components';
+import { useDispatch, useExam } from '../hooks';
+import { ExamMode, resetExam, setMode } from '../redux';
 
 const ExamTypePage: React.FC = () => {
   const navigate = useNavigate();
 
-  const { examId: activityId } = useParams();
-
-  const { status, exam, error } = useExam();
-
-  console.log(exam);
+  const exam = useExam();
 
   const dispatch = useDispatch();
-
-  if (status === 'loading' || !exam) return <LoadingScreen />;
-
-  if (status === 'error' || error)
-    throw new Error(`Error fetching exam: ${error}`);
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-[12vh] px-4 py-6">
@@ -62,15 +53,16 @@ const ExamTypePage: React.FC = () => {
     </main>
   );
 
-  function startWithMode(mode: ActivityMode) {
+  function startWithMode(mode: ExamMode) {
+    dispatch(resetExam());
     dispatch(setMode(mode));
 
     if (mode === 'customization') {
-      navigate(`/${activityId}/customize`, { replace: true });
+      navigate(`/${exam.id}/customize`, { replace: true });
       return;
     }
 
-    navigate(`/${activityId}/run`, { replace: true });
+    navigate(`/${exam.id}/run`, { replace: true });
   }
 };
 

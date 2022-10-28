@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { c } from '../../lib';
 
 export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -12,12 +11,6 @@ const Modal: React.FC<ModalProps> = ({
   children,
   ...rest
 }) => {
-  useEffect(() => {
-    document.addEventListener('click', hideModal);
-
-    return () => document.removeEventListener('click', hideModal);
-  }, [hideModal, visible]);
-
   return (
     <div
       {...rest}
@@ -25,6 +18,11 @@ const Modal: React.FC<ModalProps> = ({
         'fixed top-0 right-0 bottom-0 left-0 z-20 flex items-center justify-center bg-black/40 transition-all',
         visible ? 'visible opacity-100' : 'invisible opacity-0'
       )}
+      onClick={(e) => {
+        if (rest.onClick) rest.onClick(e);
+
+        hideModal();
+      }}
     >
       <div
         className={c(

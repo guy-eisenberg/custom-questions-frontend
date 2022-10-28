@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { activityReducer } from './slices';
+import { examSlice } from './slices';
 
 const store = configureStore({
   reducer: {
-    activity: activityReducer,
+    exam: examSlice,
   },
 });
 

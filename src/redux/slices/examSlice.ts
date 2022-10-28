@@ -1,0 +1,156 @@
+import { createSlice } from '@reduxjs/toolkit';
+import { Category, Customization, Question } from '../../types';
+
+export type ExamMode = 'normal' | 'copilot' | 'customization';
+
+export interface CategoryResults {
+  questions: { [id: string]: Question & { selectedAnswerIndex?: number } };
+  subCategories: { [id: string]: CategoryResults };
+}
+
+interface ExamState {
+  time: number;
+  paused: boolean;
+  score: number;
+  trainingMode: boolean;
+  mode: ExamMode;
+  categoriesResults: { [id: string]: CategoryResults };
+  customization: Omit<Customization, 'time_added'> | undefined;
+}
+
+const examInitialState: ExamState = {
+  time: 0,
+  paused: false,
+  score: 0,
+  categoriesResults: {},
+  trainingMode: false,
+  mode: 'normal',
+  customization: undefined,
+};
+
+const examSlice = createSlice({
+  name: 'exam',
+  initialState: examInitialState,
+  reducers: {
+    increaseTime(state) {
+      state.time += 1;
+    },
+    pause(state) {
+      state.paused = true;
+    },
+    resume(state) {
+      state.paused = false;
+    },
+    togglePaused(state) {
+      state.paused = !state.paused;
+    },
+    increaseScore(state) {
+      state.score += 1;
+    },
+    setScore(state, action: { payload: number }) {
+      state.score = action.payload;
+    },
+    setTrainingMode(state, action: { payload: boolean }) {
+      state.trainingMode = action.payload;
+    },
+    setMode(state, action: { payload: ExamMode }) {
+      state.mode = action.payload;
+    },
+    editCategoriesResults(
+      state,
+      action: {
+        payload: {
+          category: Category;
+          question: Question;
+          selectedAnswerIndex: number | undefined;
+        };
+      }
+    ) {
+      const newResults = { ...state.categoriesResults };
+
+      const { category, question, selectedAnswerIndex } = action.payload;
+
+      if (category.parent_category_id) {
+        if (newResults[category.parent_category_id] === undefined)
+          newResults[category.parent_category_id] = {
+            questions: {},
+            subCategories: {},
+          };
+
+        if (
+          newResults[category.parent_category_id].subCategories[category.id] ===
+          undefined
+        )
+          newResults[category.parent_category_id].subCategories[category.id] = {
+            questions: {},
+            subCategories: {},
+          };
+
+        newResults[category.parent_category_id].subCategories[
+          category.id
+        ].questions[question.id] = { ...question, selectedAnswerIndex };
+      } else {
+        if (newResults[category.id] === undefined)
+          newResults[category.id] = {
+            questions: {},
+            subCategories: {},
+          };
+
+        newResults[category.id].questions[question.id] = {
+          ...question,
+          selectedAnswerIndex,
+        };
+      }
+
+      state.categoriesResults = newResults;
+      state.score = getScoreFromResults(newResults);
+    },
+    setCustomization(
+      state,
+      action: { payload: Omit<Customization, 'time_added'> }
+    ) {
+      state.customization = action.payload;
+    },
+    resetExam(state) {
+      state.time = examInitialState.time;
+      state.paused = examInitialState.paused;
+      state.score = 0;
+    },
+  },
+});
+
+export const {
+  increaseTime,
+  pause,
+  resume,
+  increaseScore,
+  setScore,
+  togglePaused,
+  setTrainingMode,
+  setMode,
+  setCustomization,
+  editCategoriesResults,
+  resetExam,
+} = examSlice.actions;
+
+export default examSlice.reducer;
+
+function getScoreFromResults(results: {
+  [id: string]: CategoryResults;
+}): number {
+  return Object.values(results).reduce(
+    (sum, result) =>
+      sum +
+      Object.values(result.questions).reduce((sum, question) => {
+        const rightAnswerIndex = question.answers.findIndex(
+          (answer) => answer.is_right
+        );
+
+        return (
+          sum + (rightAnswerIndex === question.selectedAnswerIndex ? 1 : 0)
+        );
+      }, 0) +
+      getScoreFromResults(result.subCategories),
+    0
+  );
+}

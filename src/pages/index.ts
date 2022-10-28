@@ -1,3 +1,4 @@
+export { default as CompletePage } from './CompletePage';
 export { default as CustomizationPage } from './CustomizationPage';
 export { default as ExamTypePage } from './ExamTypePage';
 export { default as RouteErrorPage } from './RouteErrorPage';

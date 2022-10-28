@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useExam, useParams, useSelector } from '../../hooks';
+import { useDispatch, useExam, useSelector } from '../../hooks';
 import { c } from '../../lib';
 import { togglePaused } from '../../redux';
 import { ToggleButton } from '../core';
@@ -19,17 +19,18 @@ const Navbar: React.FC<NavbarProps> = ({
   showTrainingModeModal,
   ...rest
 }) => {
-  const { examId: activityId } = useParams();
   const navigate = useNavigate();
 
-  const { exam } = useExam();
+  const exam = useExam();
 
   const dispatch = useDispatch();
   const {
     time: t,
     trainingMode,
+    score,
     mode,
-  } = useSelector((state) => state.activity);
+    customization,
+  } = useSelector((state) => state.exam);
 
   const [showRemaining, setShowRemaining] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -55,6 +56,13 @@ const Navbar: React.FC<NavbarProps> = ({
     }
   })();
 
+  const time = showRemaining ? exam.duration - t : t;
+
+  const questionQuantity =
+    mode === 'customization' && customization
+      ? customization.question_quantity
+      : exam.question_quantity;
+
   return (
     <nav
       {...rest}
@@ -67,7 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({
       {mobileBackButton && (
         <button
           className="flex h-full items-center gap-2 bg-theme-dark-blue px-4 transition hover:brightness-95 lg:hidden"
-          onClick={() => navigate(`/${activityId}`, { replace: true })}
+          onClick={() => navigate(`/${exam.id}`, { replace: true })}
         >
           <img alt="back icon" src="images/icon_back.svg" className="h-4" />
           Back
@@ -90,10 +98,10 @@ const Navbar: React.FC<NavbarProps> = ({
           />
         </button>
         <div className="flex items-baseline gap-[1vw]">
-          <span className="text-xl font-extralight">{exam?.name}</span>
+          <span className="text-xl font-extralight">{exam.name}</span>
           <span
             className={c(
-              'font-extralight opacity-30 lg:block',
+              'font-extralight opacity-50 lg:block',
               !minified && 'hidden'
             )}
           >
@@ -164,17 +172,19 @@ const Navbar: React.FC<NavbarProps> = ({
                   {showRemaining ? 'R' : 'E'}:
                 </span>{' '}
                 <span>
-                  {Math.floor(t / 60) < 10 && '0'}
-                  {Math.floor(t / 60)}:{t % 60 < 10 && '0'}
-                  {t % 60}
+                  {Math.floor(time / 60) < 10 && '0'}
+                  {Math.floor(time / 60)}:{time % 60 < 10 && '0'}
+                  {time % 60}
                 </span>
               </span>
               <span>
-                <span className="hidden opacity-40 lg:inline-block">
+                <span className="hidden opacity-50 lg:inline-block">
                   Score:
                 </span>
-                <span className="opacity-40 lg:hidden">S:</span>{' '}
-                <span>1 of {exam?.question_quantity}</span>
+                <span className="opacity-50 lg:hidden">S:</span>{' '}
+                <span>
+                  {score} of {questionQuantity}
+                </span>
               </span>
             </div>
           </div>
@@ -197,12 +207,14 @@ const Navbar: React.FC<NavbarProps> = ({
               >
                 Enable Training Mode
               </NavbarMenuButton>
-              <NavbarMenuButton>Play/Pause</NavbarMenuButton>
-              <p className="py-4 px-6">Font Size:</p>
-              <NavbarMenuButton className="py-3 text-xs">
+              <NavbarMenuButton onClick={() => dispatch(togglePaused())}>
+                Play/Pause
+              </NavbarMenuButton>
+              <p className="py-4 px-6 font-extralight">Font Size:</p>
+              <NavbarMenuButton className="py-3 text-xs" disabled>
                 Increase
               </NavbarMenuButton>
-              <NavbarMenuButton className="py-3 text-xs">
+              <NavbarMenuButton className="py-3 text-xs" disabled>
                 Decrease
               </NavbarMenuButton>
               <NavbarMenuButton
@@ -210,11 +222,11 @@ const Navbar: React.FC<NavbarProps> = ({
               >
                 Switch Elapsed/Remaining
               </NavbarMenuButton>
-              <p className="py-4 px-6">Go to:</p>
-              <NavbarMenuButton className="py-3 text-xs">
+              <p className="py-4 px-6 font-extralight">Go to:</p>
+              <NavbarMenuButton className="py-3 text-xs" disabled>
                 Performance
               </NavbarMenuButton>
-              <NavbarMenuButton className="py-3 text-xs">
+              <NavbarMenuButton className="py-3 text-xs" disabled>
                 User Guide
               </NavbarMenuButton>
               <NavbarMenuButton

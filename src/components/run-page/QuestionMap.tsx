@@ -5,20 +5,22 @@ import { Question } from '../../types';
 import { Button } from '../core';
 
 interface QuestionMapProps extends React.HTMLAttributes<HTMLDivElement> {
+  allowNavigation: boolean;
   closeQuestionMap: () => void;
   jumpToQuestion: (question: number) => void;
   currentQuestion: number;
-  questions: Question[];
+  questions: (Question & { selectedAnswerIndex?: number })[];
 }
 
 const QuestionMap: React.FC<QuestionMapProps> = ({
+  allowNavigation,
   closeQuestionMap,
   jumpToQuestion,
   currentQuestion,
   questions,
   ...rest
 }) => {
-  const { trainingMode } = useSelector((state) => state.activity);
+  const { trainingMode } = useSelector((state) => state.exam);
 
   const [selectedQuestion, setSelectedQuestion] = useState<
     number | undefined
@@ -48,7 +50,9 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
                   (trainingMode &&
                   questions[i].selectedAnswerIndex !== undefined
                     ? questions[i].selectedAnswerIndex ===
-                      questions[i].rightAnswerIndex
+                      questions[i].answers.findIndex(
+                        (answer) => answer.is_right
+                      )
                       ? '!bg-theme-green text-white'
                       : '!bg-theme-red text-white'
                     : trainingMode
@@ -64,7 +68,11 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
               )}
               label={i + 1}
               onClick={() => {
-                if (trainingMode && currentQuestion !== i + 1)
+                if (
+                  trainingMode &&
+                  allowNavigation &&
+                  currentQuestion !== i + 1
+                )
                   setSelectedQuestion(i + 1);
               }}
               key={i}
@@ -74,20 +82,23 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
         <div className="flex flex-1 flex-col px-4 py-3 text-theme-medium-gray">
           <b className="text-small">Preview:</b>
           <p className="mt-4">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            {selectedQuestion
+              ? questions[selectedQuestion - 1].body
+              : questions[currentQuestion - 1].body}
           </p>
-          <Button
-            className="mt-auto self-end"
-            onClick={() => {
-              if (selectedQuestion) jumpToQuestion(selectedQuestion);
+          {allowNavigation && (
+            <Button
+              className="mt-auto self-end"
+              onClick={() => {
+                if (selectedQuestion) jumpToQuestion(selectedQuestion);
 
-              setSelectedQuestion(undefined);
-            }}
-            disabled={!trainingMode}
-          >
-            Jump to Question
-          </Button>
+                setSelectedQuestion(undefined);
+              }}
+              disabled={!trainingMode}
+            >
+              Jump to Question
+            </Button>
+          )}
         </div>
       </div>
     </div>

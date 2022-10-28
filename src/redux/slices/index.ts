@@ -1,2 +1,6 @@
-export * from './activitySlice';
-export { default as activityReducer, type ActivityMode } from './activitySlice';
+export * from './examSlice';
+export {
+  default as examSlice,
+  type CategoryResults,
+  type ExamMode,
+} from './examSlice';

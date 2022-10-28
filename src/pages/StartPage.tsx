@@ -1,19 +1,16 @@
 import { useNavigate } from 'react-router-dom';
-import { LoadingScreen, StartPageButton } from '../components';
+import { StartPageButton } from '../components';
 import { useDispatch, useExam } from '../hooks';
 import { setTrainingMode } from '../redux';
 
 const StartPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const { status, exam, error } = useExam();
+  const exam = useExam();
 
   const dispatch = useDispatch();
 
-  if (status === 'loading' || !exam) return <LoadingScreen />;
-
-  if (status === 'error' || error)
-    throw new Error(`Error fetching exam: ${error}`);
+  if (!exam) return null;
 
   return (
     <main className="flex flex-1 flex-col items-center gap-[12vh] px-4 py-6 text-center text-theme-dark-gray md:justify-center">
@@ -32,7 +29,7 @@ const StartPage: React.FC = () => {
               navigate('select-type');
             }}
           >
-            Start Activity
+            Start Exam
           </StartPageButton>
           {exam.training_mode && (
             <StartPageButton

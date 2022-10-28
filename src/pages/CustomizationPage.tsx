@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import _ from 'lodash';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getCustomizations, postCustomization } from '../api';
 import {
   Button,
   CategoriesBox,
@@ -10,18 +13,67 @@ import {
   SaveModal,
   ToggleButton,
 } from '../components';
-import { useParams } from '../hooks';
-import { Category, Customization } from '../types';
+import { useDispatch, useExam, useLoadingScreen } from '../hooks';
+import { tempId } from '../lib';
+import { setCustomization } from '../redux';
+import { Customization } from '../types';
 
 const CustomizationPage: React.FC = () => {
-  const { examId: activityId } = useParams();
+  const exam = useExam();
+
+  const client = useQueryClient();
+
+  const { isLoading: customizationsLoading, data: customizations } = useQuery(
+    ['customizations'],
+    () => getCustomizations(exam.id),
+    {
+      retry: 0,
+      staleTime: Infinity,
+    }
+  );
+  const {
+    mutate: mutateCustomizations,
+    isLoading: mutateCustomizationsLoading,
+  } = useMutation(
+    (customization: Customization) => postCustomization(customization),
+    {
+      onSuccess: () => client.invalidateQueries(['customizations']),
+    }
+  );
+
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
   const [loadModalOpen, setLoadModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
+  const [loadedCustomization, setLoadedCustomization] = useState<
+    Customization | undefined
+  >();
+
+  const [minutes, setMinutes] = useState('');
+  const [seconds, setSeconds] = useState('');
+  const [questionQuantity, setQuestionQuantity] = useState('');
   const [coPilotActivated, setCoPilotActivated] = useState(true);
+
+  const [disabledCateogiresIds, setDisabledCateogriesIds] = useState<string[]>(
+    []
+  );
+
+  useEffect(() => {
+    if (loadedCustomization !== undefined)
+      return () => setLoadedCustomization(undefined);
+  }, [
+    loadedCustomization,
+    minutes,
+    seconds,
+    questionQuantity,
+    coPilotActivated,
+    disabledCateogiresIds,
+  ]);
+
+  useLoadingScreen(customizationsLoading || mutateCustomizationsLoading);
 
   return (
     <main className="flex flex-1 flex-col">
@@ -49,11 +101,17 @@ const CustomizationPage: React.FC = () => {
                 </p>
                 <div className="flex gap-4">
                   <div className="flex items-center gap-2">
-                    <NumberInput />
+                    <NumberInput
+                      value={minutes}
+                      onChange={(e) => setMinutes(e.target.value)}
+                    />
                     <span>minutes</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <NumberInput />
+                    <NumberInput
+                      value={seconds}
+                      onChange={(e) => setSeconds(e.target.value)}
+                    />
                     <span>seconds</span>
                   </div>
                 </div>
@@ -62,7 +120,11 @@ const CustomizationPage: React.FC = () => {
                 <p className="mb-[2vh]">
                   Set the maximum quantity of questions:
                 </p>
-                <NumberInput className="w-20" />
+                <NumberInput
+                  className="w-20"
+                  value={questionQuantity}
+                  onChange={(e) => setQuestionQuantity(e.target.value)}
+                />
               </LabeledBox>
               <LabeledBox label="CoPilot Mode">
                 <div className="flex gap-2">
@@ -93,12 +155,15 @@ const CustomizationPage: React.FC = () => {
                   </p>
                   <CategoriesBox
                     className="w-full flex-1 overflow-y-auto lg:w-3/4 lg:basis-0"
-                    categories={DUMMY_CATEGORIES}
+                    disabledCateogiresIds={disabledCateogiresIds}
+                    setDisabledCateogriesIds={setDisabledCateogriesIds}
+                    categories={exam.categories}
                   />
                 </div>
               </LabeledBox>
               <div className="flex gap-3 lg:justify-end">
                 <Button
+                  disabled={!customizations || customizations.length === 0}
                   onClick={(e) => {
                     e.stopPropagation();
 
@@ -112,10 +177,23 @@ const CustomizationPage: React.FC = () => {
                   onClick={(e) => {
                     e.stopPropagation();
 
-                    setSaveModalOpen(true);
+                    if (loadedCustomization) {
+                      dispatch(
+                        setCustomization(
+                          _.omit(loadedCustomization, 'time_added')
+                        )
+                      );
+
+                      navigate(`/${exam.id}/run`, { replace: true });
+                    } else setSaveModalOpen(true);
                   }}
+                  disabled={
+                    minutes.length === 0 ||
+                    seconds.length === 0 ||
+                    questionQuantity.length === 0
+                  }
                 >
-                  Save & Launch
+                  {loadedCustomization ? 'Launch' : 'Save & Launch'}
                 </Button>
               </div>
             </div>
@@ -124,7 +202,7 @@ const CustomizationPage: React.FC = () => {
         <Button
           color="gray"
           className="absolute top-[2vh] left-[1vw] hidden items-center gap-4 !text-theme-medium-gray lg:flex"
-          onClick={() => navigate(`/${activityId}`, { replace: true })}
+          onClick={() => navigate(`/${exam.id}`, { replace: true })}
         >
           <img
             alt="arrow icon"
@@ -136,17 +214,42 @@ const CustomizationPage: React.FC = () => {
       </div>
       <LoadModal
         className="mx-[2vw] w-full !max-w-2xl"
-        customizations={DUMMY_CUSTOMIZATINOS}
+        customizations={customizations || []}
         visible={loadModalOpen}
         hideModal={() => setLoadModalOpen(false)}
-        load={() => {
+        load={(i) => {
+          if (!customizations || customizations.length === 0) return;
+
+          const customization = customizations[i];
+
+          setMinutes(`${Math.floor(customization.duration / 60)}`);
+          setSeconds(`${customization.duration % 60}`);
+          setQuestionQuantity(`${customization.question_quantity}`);
+          setCoPilotActivated(customization.copilot_activated);
+          setDisabledCateogriesIds(customization.disabled_categories);
+
+          setLoadedCustomization(customization);
           setLoadModalOpen(false);
         }}
       />
       <SaveModal
         className="mx-[2vw] w-full !max-w-2xl"
-        save={() => {
-          setSaveModalOpen(false);
+        save={(name) => {
+          const newCustomization = {
+            id: tempId(),
+            exam_id: exam.id,
+            name,
+            time_added: new Date(),
+            duration: parseInt(minutes) * 60 + parseInt(seconds),
+            question_quantity: parseInt(questionQuantity),
+            copilot_activated: coPilotActivated,
+            disabled_categories: disabledCateogiresIds,
+          };
+
+          mutateCustomizations(newCustomization);
+
+          dispatch(setCustomization(_.omit(newCustomization, 'time_added')));
+          navigate(`/${exam.id}/run`, { replace: true });
         }}
         visible={saveModalOpen}
         hideModal={() => setSaveModalOpen(false)}
@@ -156,77 +259,3 @@ const CustomizationPage: React.FC = () => {
 };
 
 export default CustomizationPage;
-
-const DUMMY_CATEGORIES: Category[] = [
-  {
-    id: '0',
-    name: 'Category A',
-    sub_categories: [
-      { id: '1', name: 'Sub-Category 1', sub_categories: [] },
-      { id: '2', name: 'Sub-Category 2', sub_categories: [] },
-      { id: '3', name: 'Sub-Category 3', sub_categories: [] },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Category B',
-    sub_categories: [],
-  },
-  {
-    id: '5',
-    name: 'Category C',
-    sub_categories: [],
-  },
-  {
-    id: '6',
-    name: 'Category D',
-    sub_categories: [],
-  },
-  {
-    id: '7',
-    name: 'Category E',
-    sub_categories: [],
-  },
-  {
-    id: '8',
-    name: 'Category F',
-    sub_categories: [
-      { id: '9', name: 'Sub-Category 1', sub_categories: [] },
-      { id: '10', name: 'Sub-Category 2', sub_categories: [] },
-      { id: '11', name: 'Sub-Category 3', sub_categories: [] },
-    ],
-  },
-  {
-    id: '12',
-    name: 'Category G',
-    sub_categories: [],
-  },
-  {
-    id: '13',
-    name: 'Category H',
-    sub_categories: [],
-  },
-  {
-    id: '14',
-    name: 'Category I',
-    sub_categories: [],
-  },
-  {
-    id: '15',
-    name: 'Category J',
-    sub_categories: [],
-  },
-  {
-    id: '16',
-    name: 'Category K',
-    sub_categories: [],
-  },
-];
-
-const DUMMY_CUSTOMIZATINOS: Customization[] = new Array(5)
-  .fill(null)
-  .map((_, i) => ({
-    id: `${i}`,
-    name: 'Name Goes Here',
-    date: '13:47 on 01/01/1973',
-  }));

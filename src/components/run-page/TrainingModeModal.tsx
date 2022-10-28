@@ -9,7 +9,7 @@ const TrainingModeModal: React.FC<TrainingModeModalProps> = ({
   onSubmit,
   ...rest
 }) => {
-  const { trainingMode } = useSelector((state) => state.activity);
+  const { trainingMode } = useSelector((state) => state.exam);
 
   return (
     <Modal
@@ -18,8 +18,10 @@ const TrainingModeModal: React.FC<TrainingModeModalProps> = ({
     >
       <img
         alt="exit icon"
-        src="images/icon_exit.svg"
-        className="mb-[2vh] w-10"
+        src={`images/icon_mortarboard_${
+          trainingMode ? 'disable' : 'enable'
+        }.svg`}
+        className="mb-[2vh] h-10"
       />
       <b className="mb-[2vh]">
         Are you sure you want to {trainingMode ? 'disable' : 'enable'} training

@@ -24,10 +24,10 @@ const ToggleButton: React.FC<ToggleButtonProps> = ({
     <button
       {...rest}
       className={c(
-        "relative h-7 w-[65px] rounded-full bg-white after:absolute after:top-1/2 after:h-[85%] after:w-7 after:-translate-y-1/2 after:rounded-full after:transition-all after:content-['']",
+        "relative h-7 w-[65px] rounded-full bg-white after:absolute after:top-1/2 after:h-[80%] after:w-7 after:-translate-y-1/2 after:rounded-full after:transition-all after:content-['']",
         isChecked
-          ? 'after:left-[calc(100%-2px)] after:-translate-x-full'
-          : 'after:left-[2px]',
+          ? 'after:left-[calc(100%-3px)] after:-translate-x-full'
+          : 'after:left-[3px]',
         color === 'blue' && 'after:bg-theme-dark-blue',
         color === 'green' && 'after:bg-[#74d73c]',
         rest.className

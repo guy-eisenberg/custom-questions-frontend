@@ -5,10 +5,14 @@ import { Button } from '../core';
 
 interface CategoriesBoxProps extends React.HTMLAttributes<HTMLUListElement> {
   categories: Category[];
+  disabledCateogiresIds: string[];
+  setDisabledCateogriesIds: (ids: string[]) => void;
 }
 
 const CategoriesBox: React.FC<CategoriesBoxProps> = ({
   categories,
+  disabledCateogiresIds,
+  setDisabledCateogriesIds,
   ...rest
 }) => {
   const [openCategoryIndex, setOpenCategoryIndex] = useState<
@@ -28,6 +32,8 @@ const CategoriesBox: React.FC<CategoriesBoxProps> = ({
           <CategoryRow
             index={i}
             category={category}
+            disabledCateogiresIds={disabledCateogiresIds}
+            setDisabledCateogriesIds={setDisabledCateogriesIds}
             type="category"
             openCategoryIndex={openCategoryIndex}
             setOpenCategoryIndex={setOpenCategoryIndex}
@@ -36,11 +42,36 @@ const CategoriesBox: React.FC<CategoriesBoxProps> = ({
         ))}
       </ul>
       <div className="mt-[1vh] flex items-center">
-        <Button color="gray" className="!px-2 text-xs">
+        <Button
+          color="gray"
+          className="!px-2 text-xs"
+          onClick={() => setDisabledCateogriesIds([])}
+        >
           Select All
         </Button>
         <span className="text-theme-light-gray">|</span>
-        <Button color="gray" className="!px-2 text-xs">
+        <Button
+          color="gray"
+          className="!px-2 text-xs"
+          onClick={() => {
+            const allCategoriesIds = categories.reduce(
+              (arr, category) => [...arr, ...flatCategoryIds(category)],
+              [] as string[]
+            );
+
+            setDisabledCateogriesIds(allCategoriesIds);
+
+            function flatCategoryIds(category: Category): string[] {
+              return [
+                category.id,
+                ...category.sub_categories.reduce(
+                  (ids, category) => [...ids, ...flatCategoryIds(category)],
+                  [] as string[]
+                ),
+              ];
+            }
+          }}
+        >
           Deselect All
         </Button>
       </div>
@@ -52,6 +83,8 @@ export default CategoriesBox;
 
 interface CategoryRowProps extends React.LiHTMLAttributes<HTMLLIElement> {
   index: number;
+  disabledCateogiresIds: string[];
+  setDisabledCateogriesIds: (ids: string[]) => void;
   category: Category;
   type: 'category' | 'sub-category';
   openCategoryIndex?: number | undefined;
@@ -60,6 +93,8 @@ interface CategoryRowProps extends React.LiHTMLAttributes<HTMLLIElement> {
 
 const CategoryRow: React.FC<CategoryRowProps> = ({
   index: i,
+  disabledCateogiresIds,
+  setDisabledCateogriesIds,
   category,
   type,
   openCategoryIndex,
@@ -92,7 +127,61 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
             />
           )}
         </button>
-        <Checkbox checked={true} />
+        {(() => {
+          var checked: boolean | 'half' = !disabledCateogiresIds.includes(
+            category.id
+          );
+
+          if (checked) {
+            if (
+              disabledCateogiresIds.some((id) =>
+                category.sub_categories
+                  .map((category) => category.id)
+                  .includes(id)
+              )
+            ) {
+              checked = 'half';
+            }
+          }
+
+          return (
+            <Checkbox
+              checked={checked}
+              onToggle={() => {
+                const newDisabledCateogiresIds = [...disabledCateogiresIds];
+
+                const removeFromDeleted = newDisabledCateogiresIds.includes(
+                  category.id
+                );
+
+                if (removeFromDeleted) {
+                  const index = newDisabledCateogiresIds.indexOf(category.id);
+
+                  if (index !== -1) newDisabledCateogiresIds.splice(index, 1);
+
+                  category.sub_categories.forEach((category) => {
+                    const index = newDisabledCateogiresIds.indexOf(category.id);
+
+                    if (index !== -1) newDisabledCateogiresIds.splice(index, 1);
+                  });
+                } else {
+                  newDisabledCateogiresIds.push(
+                    category.id,
+                    ...category.sub_categories
+                      .filter(
+                        (cateogry) =>
+                          !newDisabledCateogiresIds.includes(cateogry.id)
+                      )
+                      .map((category) => category.id)
+                  );
+                }
+
+                setDisabledCateogriesIds(newDisabledCateogiresIds);
+              }}
+              full={checked && category.parent_category_id !== undefined}
+            />
+          );
+        })()}
       </div>
       {type === 'category' && category.sub_categories.length > 0 && (
         <ul
@@ -108,6 +197,8 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
           {category.sub_categories.map((category) => (
             <CategoryRow
               index={i}
+              disabledCateogiresIds={disabledCateogiresIds}
+              setDisabledCateogriesIds={setDisabledCateogriesIds}
               category={category}
               type="sub-category"
               key={category.id}
@@ -122,9 +213,10 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 const Checkbox: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
     checked: boolean | 'half';
+    onToggle: () => void;
     full?: boolean;
   }
-> = ({ checked = true, full = false, ...rest }) => {
+> = ({ checked = true, onToggle, full = false, ...rest }) => {
   return (
     <button
       {...rest}
@@ -137,6 +229,7 @@ const Checkbox: React.FC<
           : 'border border-theme-light-gray bg-white',
         rest.className
       )}
+      onClick={onToggle}
     >
       <img
         alt="check icon"
