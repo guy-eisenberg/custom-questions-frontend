@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ExamTypePageButton } from '../components';
 import { useDispatch, useExam } from '../hooks';
+import { p } from '../lib';
 import { ExamMode, resetExam, setMode } from '../redux';
 
 const ExamTypePage: React.FC = () => {
@@ -47,7 +48,7 @@ const ExamTypePage: React.FC = () => {
       </div>
       <img
         alt="logo"
-        src="images/logo.svg"
+        src={p('images/logo.svg')}
         className="bottom-4 mt-auto w-1/2 md:absolute md:bottom-[1vw] md:left-[1vw] md:w-[10%]"
       />
     </main>

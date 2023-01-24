@@ -4,7 +4,7 @@ import { Category, Customization, Question } from '../../types';
 export type ExamMode = 'normal' | 'copilot' | 'customization';
 
 export interface CategoryResults {
-  questions: { [id: string]: Question & { selectedAnswerIndex?: number } };
+  questions: { [id: string]: Question & { selectedAnswerId?: string } };
   subCategories: { [id: string]: CategoryResults };
 }
 
@@ -50,6 +50,9 @@ const examSlice = createSlice({
     setScore(state, action: { payload: number }) {
       state.score = action.payload;
     },
+    calculateScore(state) {
+      state.score = getScoreFromResults(state.categoriesResults);
+    },
     setTrainingMode(state, action: { payload: boolean }) {
       state.trainingMode = action.payload;
     },
@@ -62,13 +65,13 @@ const examSlice = createSlice({
         payload: {
           category: Category;
           question: Question;
-          selectedAnswerIndex: number | undefined;
+          selectedAnswerId: string | undefined;
         };
       }
     ) {
       const newResults = { ...state.categoriesResults };
 
-      const { category, question, selectedAnswerIndex } = action.payload;
+      const { category, question, selectedAnswerId } = action.payload;
 
       if (category.parent_category_id) {
         if (newResults[category.parent_category_id] === undefined)
@@ -88,7 +91,7 @@ const examSlice = createSlice({
 
         newResults[category.parent_category_id].subCategories[
           category.id
-        ].questions[question.id] = { ...question, selectedAnswerIndex };
+        ].questions[question.id] = { ...question, selectedAnswerId };
       } else {
         if (newResults[category.id] === undefined)
           newResults[category.id] = {
@@ -98,12 +101,11 @@ const examSlice = createSlice({
 
         newResults[category.id].questions[question.id] = {
           ...question,
-          selectedAnswerIndex,
+          selectedAnswerId,
         };
       }
 
       state.categoriesResults = newResults;
-      state.score = getScoreFromResults(newResults);
     },
     setCustomization(
       state,
@@ -114,7 +116,8 @@ const examSlice = createSlice({
     resetExam(state) {
       state.time = examInitialState.time;
       state.paused = examInitialState.paused;
-      state.score = 0;
+      state.score = examInitialState.score;
+      state.categoriesResults = examInitialState.categoriesResults;
     },
   },
 });
@@ -125,6 +128,7 @@ export const {
   resume,
   increaseScore,
   setScore,
+  calculateScore,
   togglePaused,
   setTrainingMode,
   setMode,
@@ -142,13 +146,9 @@ function getScoreFromResults(results: {
     (sum, result) =>
       sum +
       Object.values(result.questions).reduce((sum, question) => {
-        const rightAnswerIndex = question.answers.findIndex(
-          (answer) => answer.is_right
-        );
+        const rightAnswer = question.answers.find((answer) => answer.is_right)!;
 
-        return (
-          sum + (rightAnswerIndex === question.selectedAnswerIndex ? 1 : 0)
-        );
+        return sum + (question.selectedAnswerId === rightAnswer.id ? 1 : 0);
       }, 0) +
       getScoreFromResults(result.subCategories),
     0

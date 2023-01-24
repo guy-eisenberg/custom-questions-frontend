@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useClock } from '../../hooks';
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 
 const PauseIndicator: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   ...rest
@@ -27,7 +27,11 @@ const PauseIndicator: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
         rest.className
       )}
     >
-      <img alt="pause icon" src="images/icon_paused.svg" className="h-6 w-6" />
+      <img
+        alt="pause icon"
+        src={p('images/icon_paused.svg')}
+        className="h-6 w-6"
+      />
     </div>
   );
 };

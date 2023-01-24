@@ -5,13 +5,13 @@ import useLoadingScreen from './useLoadingScreen';
 import useParams from './useParams';
 
 function useExam() {
-  const { examId } = useParams();
+  const { examId, questions } = useParams();
 
   const {
     isLoading,
     isError,
     data: exam,
-  } = useQuery(['exam'], () => getExam(examId), {
+  } = useQuery(['exam'], () => getExam(examId, questions), {
     retry: 0,
     staleTime: Infinity,
   });
@@ -20,7 +20,7 @@ function useExam() {
 
   if (isError || (!isLoading && !exam)) throw new Error('Error');
 
-  // { TODO: DELETE! }
+  //{ TODO: DELETE! }
   // return {
   //   id: '',
   //   name: '',
@@ -38,7 +38,6 @@ function useExam() {
   //   strong_pass: 0,
   //   weak_pass: 0,
   //   question_map: false,
-  //   // skill_categories: SkillCategory[],
   //   categories: [] as Category[],
   // };
 

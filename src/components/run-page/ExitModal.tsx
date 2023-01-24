@@ -1,3 +1,4 @@
+import { p } from '../../lib';
 import { Button, Modal, ModalProps } from '../core';
 
 interface ExitModalProps extends ModalProps {
@@ -12,7 +13,7 @@ const ExitModal: React.FC<ExitModalProps> = ({ exitToMenu, ...rest }) => {
     >
       <img
         alt="exit icon"
-        src="images/icon_exit.svg"
+        src={p('images/icon_exit.svg')}
         className="mb-[2vh] w-10"
       />
       <b className="mb-[2vh]">Are you sure you want to exit?</b>

@@ -1,4 +1,5 @@
 import { useSelector } from '../../hooks';
+import { p } from '../../lib';
 import { Button, Modal, ModalProps } from '../core';
 
 interface TrainingModeModalProps extends ModalProps {
@@ -18,9 +19,9 @@ const TrainingModeModal: React.FC<TrainingModeModalProps> = ({
     >
       <img
         alt="exit icon"
-        src={`images/icon_mortarboard_${
-          trainingMode ? 'disable' : 'enable'
-        }.svg`}
+        src={p(
+          `images/icon_mortarboard_${trainingMode ? 'disable' : 'enable'}.svg`
+        )}
         className="mb-[2vh] h-10"
       />
       <b className="mb-[2vh]">

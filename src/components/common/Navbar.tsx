@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useExam, useSelector } from '../../hooks';
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 import { togglePaused } from '../../redux';
 import { ToggleButton } from '../core';
 
 interface NavbarProps extends React.HTMLAttributes<HTMLDivElement> {
   minified?: boolean;
+  endButtons?: boolean;
   mobileBackButton?: boolean;
   showExitModal?: () => void;
+  showRestartModal?: () => void;
   showTrainingModeModal?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   minified = false,
+  endButtons = false,
   mobileBackButton = false,
   showExitModal,
+  showRestartModal,
   showTrainingModeModal,
   ...rest
 }) => {
@@ -67,21 +71,25 @@ const Navbar: React.FC<NavbarProps> = ({
     <nav
       {...rest}
       className={c(
-        'sticky top-0 left-0 right-0 z-10 flex select-none text-white',
+        'sticky top-0 left-0 right-0 z-20 flex select-none text-white',
         trainingMode && !minified ? 'bg-[#82dd47]' : 'bg-[#3793d1]',
         rest.className
       )}
     >
       {mobileBackButton && (
         <button
-          className="flex h-full items-center gap-2 bg-theme-dark-blue px-4 transition hover:brightness-95 lg:hidden"
+          className="flex h-full shrink-0 items-center gap-2 bg-theme-dark-blue px-4 transition hover:brightness-95 lg:hidden"
           onClick={() => navigate(`/${exam.id}`, { replace: true })}
         >
-          <img alt="back icon" src="images/icon_back.svg" className="h-4" />
+          <img
+            alt="back icon"
+            src={p('images/icon_back.svg')}
+            className="h-4"
+          />
           Back
         </button>
       )}
-      <div className="flex flex-1 items-center gap-[1vw] py-2 px-3">
+      <div className="flex min-w-0 flex-1 basis-0 items-center gap-[1vw] py-2 px-2 md:px-3">
         <button
           className="h-full shrink-0 transition hover:scale-105 hover:brightness-105 active:scale-95"
           onClick={(e) => {
@@ -92,16 +100,16 @@ const Navbar: React.FC<NavbarProps> = ({
         >
           <img
             alt="roundel logo"
-            src="images/logo_roundel.svg"
+            src={p('images/logo_roundel.svg')}
             className="h-full"
             draggable={false}
           />
         </button>
-        <div className="flex items-baseline gap-[1vw]">
-          <span className="text-xl font-extralight">{exam.name}</span>
+        <div className="flex flex-1 items-center gap-[1vw] overflow-hidden">
+          <span className="truncate text-xl font-extralight">{exam.name}</span>
           <span
             className={c(
-              'font-extralight opacity-50 lg:block',
+              'truncate font-extralight opacity-50 lg:block',
               !minified && 'hidden'
             )}
           >
@@ -119,7 +127,7 @@ const Navbar: React.FC<NavbarProps> = ({
           >
             <img
               alt="training mode icon"
-              src="images/icon_mortarboard.svg"
+              src={p('images/icon_mortarboard.svg')}
               className="mr-4 h-[65%]"
               draggable={false}
             />
@@ -163,7 +171,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 }}
               />
             </div>
-            <div className="flex gap-4 align-baseline text-lg text-white/80">
+            <div className="flex items-center gap-4 text-lg text-white/80">
               <span>
                 <span className="hidden opacity-40 lg:inline-block">
                   {showRemaining ? 'Remaining' : 'Elapsed'}:
@@ -183,14 +191,17 @@ const Navbar: React.FC<NavbarProps> = ({
                 </span>
                 <span className="opacity-50 lg:hidden">S:</span>{' '}
                 <span>
-                  {score} of {questionQuantity}
+                  {score}{' '}
+                  <span className="hidden md:inline-block">
+                    of {questionQuantity}
+                  </span>
                 </span>
               </span>
             </div>
           </div>
           <div
             className={c(
-              'absolute top-full left-0 right-0 h-[calc(100vh-100%)] bg-black/40 transition-all',
+              'absolute top-full left-0 right-0 bottom-0 bg-black/40 transition-all',
               menuOpen ? 'visible opacity-100' : 'invisible opacity-0'
             )}
           >
@@ -242,6 +253,30 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </>
       )}
+      {endButtons && (
+        <div className="flex">
+          <button
+            className="h-full shrink-0 bg-theme-dark-blue px-4 hover:brightness-95"
+            onClick={showRestartModal}
+          >
+            <img
+              alt="restart icon"
+              src={p('images/icon_restart.svg')}
+              className="h-6 w-6"
+            />
+          </button>
+          <button
+            className="h-full shrink-0 bg-theme-dark-blue px-4 hover:brightness-95"
+            onClick={showExitModal}
+          >
+            <img
+              alt="exit icon"
+              src={p('images/icon_exit_white.svg')}
+              className="h-6 w-6"
+            />
+          </button>
+        </div>
+      )}
     </nav>
   );
 };
@@ -264,7 +299,7 @@ const ActionButton: React.FC<
     >
       <img
         alt="action button"
-        src={`images/${icon}`}
+        src={p(`images/${icon}`)}
         className="w-5"
         draggable={false}
       />

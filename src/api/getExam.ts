@@ -10,26 +10,34 @@ import type {
   Question,
 } from '../types';
 
-async function getExam(examId: string): Promise<Exam> {
+async function getExam(examId: string, questions?: string[]): Promise<Exam> {
   try {
-    const { data } = await api.get<DBExam>(`/exams.php?id=${examId}`);
+    const { data: exam } = await api.get<DBExam>(
+      `/get-exam.php?id=${examId}&questions=${questions}`
+    );
 
     return {
-      ...data,
-      allow_copilot: data.allow_copilot === '1',
-      allow_user_navigation: data.allow_user_navigation === '1',
-      customization_mode: data.customization_mode === '1',
-      duration: parseInt(data.duration),
-      exam_builder: data.exam_builder === '1',
-      flag_questions: data.flag_questions === '1',
-      question_duration: parseInt(data.question_duration),
-      question_map: data.question_map === '1',
-      question_quantity: parseInt(data.question_quantity),
-      show_results: data.show_results === '1',
-      strong_pass: parseInt(data.strong_pass),
-      training_mode: data.training_mode === '1',
-      weak_pass: parseInt(data.weak_pass),
-      categories: parseDBCategories(data.categories),
+      ...exam,
+      allow_copilot: parseBoolean(exam.allow_copilot),
+      allow_user_navigation: parseBoolean(exam.allow_user_navigation),
+      customization_mode: parseBoolean(exam.customization_mode),
+      duration: parseInt(exam.duration),
+      exam_builder: parseBoolean(exam.exam_builder),
+      flag_questions: parseBoolean(exam.flag_questions),
+      question_duration: parseInt(exam.question_duration),
+      question_map: parseBoolean(exam.question_map),
+      question_quantity: parseInt(exam.question_quantity),
+      show_results: parseBoolean(exam.show_results),
+      strong_pass: exam.strong_pass ? parseInt(exam.strong_pass) : undefined,
+      training_mode: parseBoolean(exam.training_mode),
+      weak_pass: exam.weak_pass ? parseInt(exam.weak_pass) : undefined,
+      categories: parseDBCategories(exam.categories),
+      custom_content: exam.custom_content
+        ? {
+            ...exam.custom_content,
+            content: JSON.parse(exam.custom_content.content),
+          }
+        : undefined,
     };
   } catch (err) {
     return Promise.reject(err);
@@ -62,4 +70,8 @@ function parseDBCategories(categories: DBCategory[]) {
       is_right: answer.is_right === '1',
     };
   }
+}
+
+function parseBoolean(value: string | boolean) {
+  return value === '1' || value === true;
 }

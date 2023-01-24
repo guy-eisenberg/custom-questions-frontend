@@ -13,11 +13,11 @@ const LabeledBox: React.FC<LabeledBoxProps> = ({
     <div
       {...rest}
       className={c(
-        'flex flex-col rounded-md border border-theme-light-gray text-small text-theme-medium-gray',
+        'flex flex-col rounded-[5px] border border-[#dddddd] text-small text-theme-medium-gray',
         rest.className
       )}
     >
-      <p className="border-b border-b-theme-light-gray px-[2vh] py-[1vh] font-semibold text-theme-dark-gray">
+      <p className="border-b border-b-[#dddddd] px-[2vh] py-[1vh] font-semibold text-theme-dark-gray">
         {label}
       </p>
       <div className="flex-1 p-[2vh]">{children}</div>

@@ -26,7 +26,7 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={c(
-          'max-w-lg rounded-md bg-white px-6 py-4 shadow-md',
+          'max-w-[90%] rounded-md bg-white px-6 py-4 shadow-md',
           rest.className
         )}
         onClick={(e) => e.stopPropagation()}

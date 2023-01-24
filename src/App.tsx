@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 import {
@@ -48,6 +49,17 @@ const router = createHashRouter([
 const queryClient = new QueryClient();
 
 function App() {
+  useEffect(() => {
+    document.addEventListener('contextmenu', preventContextMenu);
+
+    return () =>
+      document.removeEventListener('contextmenu', preventContextMenu);
+
+    function preventContextMenu(e: MouseEvent) {
+      e.preventDefault();
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>

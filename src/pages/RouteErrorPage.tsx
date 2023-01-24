@@ -1,5 +1,6 @@
 import { useNavigate, useRouteError } from 'react-router-dom';
 import { Button } from '../components';
+import { p } from '../lib';
 
 const RouteErrorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const RouteErrorPage: React.FC = () => {
       <div className="mb-12">
         <img
           alt="broken link icon"
-          src="images/icon_broken_link.svg"
+          src={p('images/icon_broken_link.svg')}
           className="mx-auto mb-8 w-56"
         />
         <h1 className="text-title">Houston, we have a problem!</h1>

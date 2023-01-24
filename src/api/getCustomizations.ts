@@ -4,7 +4,7 @@ import { Customization, DBCustomization } from '../types';
 async function getCustomizations(examId: string): Promise<Customization[]> {
   try {
     const { data } = await api.get<DBCustomization[]>(
-      `/customizations.php?exam-id=${examId}`
+      `/get-user-customizations.php?exam-id=${examId}`
     );
 
     return data.map((customization) => ({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 import { Category } from '../../types';
 import { Button } from '../core';
 
@@ -122,8 +122,11 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
           {category.sub_categories.length > 0 && (
             <img
               alt="arrow icon"
-              src="images/icon_arrow.svg"
-              className="h-2 rotate-180 opacity-30"
+              src={p('images/icon_arrow.svg')}
+              className={c(
+                'h-2 opacity-30 transition',
+                i === openCategoryIndex ? 'rotate-[270deg]' : 'rotate-180'
+              )}
             />
           )}
         </button>
@@ -233,7 +236,7 @@ const Checkbox: React.FC<
     >
       <img
         alt="check icon"
-        src="images/icon_check.svg"
+        src={p('images/icon_check.svg')}
         className={c(
           'absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2',
           checked === true ? 'opacity 100' : 'opacity-0'
@@ -241,7 +244,7 @@ const Checkbox: React.FC<
       />
       <img
         alt="sub icon"
-        src="images/icon_sub.svg"
+        src={p('images/icon_sub.svg')}
         className={c(
           'absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2',
           checked === 'half' ? 'opacity 100' : 'opacity-0'

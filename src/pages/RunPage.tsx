@@ -9,8 +9,10 @@ import {
   LoadingScreen,
   Navbar,
   PauseIndicator,
+  PieTimer,
   PreSumbitModal,
   QuestionMap,
+  TabsContent,
   TrainingModeModal,
 } from '../components';
 import {
@@ -18,11 +20,13 @@ import {
   useClock,
   useDispatch,
   useExam,
+  useFlaggedQuestions,
   useRefState,
   useSelector,
 } from '../hooks';
-import { c } from '../lib';
+import { c, p } from '../lib';
 import {
+  calculateScore,
   CategoryResults,
   editCategoriesResults,
   increaseTime,
@@ -40,6 +44,7 @@ const RunPage: React.FC = () => {
   const navigate = useNavigate();
 
   const exam = useExam();
+  const { flaggedQuestionsIds, mutateFlaggedQuestions } = useFlaggedQuestions();
 
   const { status, data, error } = useQuery(['exam'], () => getExam(exam.id), {
     retry: 0,
@@ -59,16 +64,32 @@ const RunPage: React.FC = () => {
   const [explanationTabOpen, setExplanationTabOpen] = useState(false);
 
   const [questions, setQuestions, questionsRef] = useRefState<
-    (Question & { selectedAnswerIndex?: number })[]
+    (Question & { selectedAnswerId?: string })[]
   >([]);
 
-  const [category, setCategory, categoryRef] = useRefState<
-    Category | undefined
-  >(undefined);
+  const [, setCategory, categoryRef] = useRefState<Category | undefined>(
+    undefined
+  );
 
   const [currentQuestion, setCurrentQuestion, currentQuestionRef] = useRefState<
     (Question & { index: number }) | undefined
   >(undefined);
+
+  const showControls =
+    exam.allow_user_navigation ||
+    exam.flag_questions ||
+    exam.question_map ||
+    examState.trainingMode;
+
+  const questionsQuantity =
+    examState.mode === 'customization'
+      ? examState.customization!.question_quantity
+      : exam.question_quantity;
+
+  const onCoPilot =
+    examState.mode === 'copilot' ||
+    (examState.mode === 'customization' &&
+      examState.customization?.copilot_activated);
 
   const allCategories = useMemo(() => {
     return exam.categories.reduce(
@@ -87,30 +108,44 @@ const RunPage: React.FC = () => {
     }
   }, [exam.categories]);
 
-  const allQuestions = useMemo(
-    () =>
-      allCategories.reduce(
-        (arr, category) => [...arr, ...category.questions],
-        [] as Question[]
-      ),
-    [allCategories]
-  );
+  const allQuestions = useMemo(() => {
+    return allCategories.reduce(
+      (arr, category) => [
+        ...arr,
+        ...category.questions.map(shuffleQuestionAnswers),
+      ],
+      [] as Question[]
+    );
 
-  console.log(questions);
-  console.log(currentQuestion?.index);
+    function shuffleQuestionAnswers(question: Question): Question {
+      return {
+        ...question,
+        answers: _.shuffle(question.answers),
+      };
+    }
+  }, [allCategories]);
+
+  const customContent = useMemo(() => {
+    if (exam.custom_content) {
+      switch (exam.custom_content.type) {
+        case 'image':
+          return (
+            <img
+              alt=""
+              className="max-h-96"
+              src={exam.custom_content.content}
+            />
+          );
+        case 'text':
+          return <p className="text-sm">{exam.custom_content.content}</p>;
+        case 'tabs':
+          return <TabsContent tabs={exam.custom_content.content} />;
+      }
+    }
+  }, [exam.custom_content]);
 
   const changeQuestion = useCallback(
     (question: Question & { index: number }) => {
-      dispatch(
-        editCategoriesResults({
-          category: categoryRef.current!,
-          question: currentQuestionRef.current!,
-          selectedAnswerIndex:
-            questionsRef.current[currentQuestionRef.current!.index]
-              .selectedAnswerIndex,
-        })
-      );
-
       const newQuestions = [...questionsRef.current];
       newQuestions[question.index] = {
         ...newQuestions[question.index],
@@ -124,18 +159,49 @@ const RunPage: React.FC = () => {
       setQuestions(newQuestions);
       setCategory(newCategory);
       setCurrentQuestion(question);
+
+      dispatch(calculateScore());
     },
     [
       dispatch,
       questionsRef,
-      categoryRef,
-      currentQuestionRef,
       setCurrentQuestion,
       setQuestions,
       setCategory,
       allCategories,
     ]
   );
+
+  const submitAnswer = useCallback(
+    (selectedAnswerId?: string) => {
+      const newQuestions = [...questionsRef.current];
+
+      var newSelectedAnswerId: string | undefined =
+        newQuestions[currentQuestionRef.current!.index].selectedAnswerId;
+
+      if (selectedAnswerId !== undefined)
+        newSelectedAnswerId = selectedAnswerId;
+
+      newQuestions[currentQuestionRef.current!.index].selectedAnswerId =
+        newSelectedAnswerId;
+
+      dispatch(
+        editCategoriesResults({
+          category: categoryRef.current!,
+          question: currentQuestionRef.current!,
+          selectedAnswerId: newSelectedAnswerId,
+        })
+      );
+
+      setQuestions(newQuestions);
+    },
+    [categoryRef, currentQuestionRef, dispatch, questionsRef, setQuestions]
+  );
+
+  const submitExam = useCallback(() => {
+    if (exam.show_results) navigate(`/${exam.id}/complete/overview`);
+    else navigate(`/${exam.id}`);
+  }, [navigate, exam.id, exam.show_results]);
 
   useEffect(function setupBackgroundClickHandler() {
     document.addEventListener('click', onBackgroundClick);
@@ -169,13 +235,44 @@ const RunPage: React.FC = () => {
     [examState.paused]
   );
 
+  useEffect(() => {
+    if (!currentQuestionRef.current) return;
+
+    if (
+      !exam.allow_user_navigation &&
+      examState.time > 0 &&
+      examState.time % exam.question_duration === 0
+    ) {
+      submitAnswer(undefined);
+
+      if (currentQuestionRef.current.index + 1 < questionsQuantity) {
+        changeQuestion({
+          ...questionsRef.current[currentQuestionRef.current.index + 1],
+          index: currentQuestionRef.current.index + 1,
+        });
+      } else submitExam();
+    }
+  }, [
+    navigate,
+    submitExam,
+    changeQuestion,
+    submitAnswer,
+    currentQuestionRef,
+    exam,
+    examState.mode,
+    examState.customization,
+    examState.time,
+    questionsRef,
+    questionsQuantity,
+  ]);
+
   useEffect(
     function finishAfterTime() {
       const timeRemaining = exam.duration - examState.time;
 
-      if (timeRemaining <= 0) navigate(`/${exam.id}/complete/overview`);
+      if (timeRemaining <= 0) submitExam();
     },
-    [navigate, exam.id, exam.duration, examState.time]
+    [navigate, submitExam, exam.id, exam.duration, examState.time]
   );
 
   //  Generate questions:
@@ -299,10 +396,7 @@ const RunPage: React.FC = () => {
         };
 
         setQuestions((questions) => {
-          if (
-            !questions[newQuestion.index] ||
-            questions[newQuestion.index].selectedAnswerIndex === undefined
-          ) {
+          if (!questions[newQuestion.index]) {
             const newQuestions = [...questions];
 
             newQuestions[newQuestion.index] = {
@@ -337,22 +431,26 @@ const RunPage: React.FC = () => {
       }
 
       function getCategoryWeakPoints(category: CategoryResults): number {
-        return Object.values(category.questions).reduce(
-          (sum, right) => sum + (right ? -1 : 1),
-          0
-        );
+        return Object.values(category.questions).reduce((sum, question) => {
+          const rightAnswerId = question.answers.find(
+            (answer) => answer.is_right
+          )!.id;
+
+          return sum + (question.selectedAnswerId === rightAnswerId ? -1 : 1);
+        }, 0);
       }
     },
     [
       setQuestions,
+      changeQuestion,
       currentQuestionRef,
       questionsRef,
       allCategories,
-      changeQuestion,
-      examState.categoriesResults,
+      allQuestions,
+      exam.allow_user_navigation,
       examState.mode,
       examState.customization,
-      allQuestions,
+      examState.categoriesResults,
     ]
   );
 
@@ -361,22 +459,6 @@ const RunPage: React.FC = () => {
   if (status === 'error' || error)
     throw new Error(`Error fetching exam: ${error}`);
 
-  const showControls =
-    exam.allow_user_navigation ||
-    exam.flag_questions ||
-    exam.question_map ||
-    examState.trainingMode;
-
-  const questionsQuantity =
-    examState.mode === 'customization'
-      ? examState.customization!.question_quantity
-      : exam.question_quantity;
-
-  const onCoPilot =
-    examState.mode === 'copilot' ||
-    (examState.mode === 'customization' &&
-      examState.customization?.copilot_activated);
-
   return (
     <main className="relative flex flex-1 flex-col bg-white">
       <Navbar
@@ -384,30 +466,58 @@ const RunPage: React.FC = () => {
         showExitModal={() => setExitModalOpen(true)}
         showTrainingModeModal={() => setTrainingModeModalOpen(true)}
       />
-      <div className="relative flex flex-1 flex-col items-center justify-evenly px-4 py-6">
+      <div className="fixed top-14 h-1 w-full">
+        <div
+          className="h-full bg-theme-extra-dark-gray transition-all"
+          style={{
+            width: `calc(${
+              ((currentQuestion?.index || 0) + 1) / questionsQuantity
+            } * 100%)`,
+          }}
+        ></div>
+      </div>
+      {!exam.allow_user_navigation && (
+        <PieTimer
+          time={exam.question_duration * 1000}
+          className="fixed top-20 right-8"
+          key={currentQuestion?.index}
+        />
+      )}
+      <div className="relative flex flex-1 flex-col items-center justify-evenly gap-6 px-4 py-6">
         {examState.trainingMode && examState.paused && (
           <PauseIndicator className="absolute top-12 right-12" />
         )}
-        <p className="mb-[10vh] text-center text-small-title font-semibold text-theme-dark-gray">
+        <div className="mt-6 flex w-[90%] justify-center whitespace-pre-wrap md:mt-0 md:w-4/5">
+          {customContent}
+        </div>
+        <p className="text-center text-lg font-semibold text-theme-dark-gray md:text-small-title">
           {currentQuestion?.body}
         </p>
-        <div className="mb-[10vh] flex w-3/4 max-w-lg flex-col gap-[2vh] md:w-full">
+        <div className="flex w-3/4 max-w-lg flex-col gap-[2vh] md:w-full">
           {currentQuestion?.answers.map((answer, i) => (
             <AnswerButton
               className={c(
                 examState.trainingMode &&
-                  questions[currentQuestion.index].selectedAnswerIndex !==
+                  questions[currentQuestion.index].selectedAnswerId !==
                     undefined &&
                   (i ===
                   currentQuestion.answers.findIndex((answer) => answer.is_right)
                     ? '!bg-theme-green !text-white'
-                    : questions[currentQuestion.index].selectedAnswerIndex ===
-                        i && '!bg-theme-red !text-white')
+                    : questions[currentQuestion.index].selectedAnswerId ===
+                        answer.id && '!bg-theme-red !text-white')
               )}
               selected={
-                i === questions[currentQuestion.index].selectedAnswerIndex
+                answer.id === questions[currentQuestion.index].selectedAnswerId
               }
-              onClick={() => submitAnswer(i)}
+              disabled={examState.paused}
+              onClick={() => {
+                if (
+                  questions[currentQuestion.index].selectedAnswerId ===
+                    undefined ||
+                  examState.trainingMode
+                )
+                  submitAnswer(answer.id);
+              }}
               key={i}
             >
               {answer.body}
@@ -427,7 +537,7 @@ const RunPage: React.FC = () => {
                       index: currentQuestion.index - 1,
                     });
                 }}
-                disabled={currentQuestion.index === 0}
+                disabled={examState.paused || currentQuestion.index === 0}
               />
             )}
             <button
@@ -443,7 +553,7 @@ const RunPage: React.FC = () => {
             >
               <img
                 alt="explanation icon"
-                src="images/icon_explanation.svg"
+                src={p('images/icon_explanation.svg')}
                 className="w-8"
               />
             </button>
@@ -458,16 +568,30 @@ const RunPage: React.FC = () => {
               >
                 <img
                   alt="question map icon"
-                  src="images/icon_question_map.svg"
+                  src={p('images/icon_question_map.svg')}
                   className="w-8"
                 />
               </button>
             )}
             {exam.flag_questions && (
-              <button className="mx-3 transition hover:scale-105 active:scale-95 active:brightness-95">
+              <button
+                className="mx-3 transition hover:scale-105 active:scale-95 active:brightness-95"
+                onClick={() => {
+                  mutateFlaggedQuestions({
+                    questionId: currentQuestion.id,
+                    flag: !flaggedQuestionsIds?.includes(currentQuestion.id),
+                  });
+                }}
+              >
                 <img
                   alt="flag question icon"
-                  src="images/icon_flag_question.svg"
+                  src={p(
+                    `images/icon_flag_question${
+                      flaggedQuestionsIds?.includes(currentQuestion.id)
+                        ? '_red'
+                        : ''
+                    }.svg`
+                  )}
                   className="w-8"
                 />
               </button>
@@ -477,9 +601,10 @@ const RunPage: React.FC = () => {
                 className="ml-3"
                 dir="right"
                 disabled={
-                  onCoPilot
+                  examState.paused ||
+                  (onCoPilot
                     ? currentQuestion.index >= questions.length - 1
-                    : currentQuestion.index > questions.length - 1
+                    : currentQuestion.index > questions.length - 1)
                 }
                 onClick={() => {
                   if (currentQuestion.index < questionsQuantity - 1)
@@ -560,27 +685,10 @@ const RunPage: React.FC = () => {
       <PreSumbitModal
         visible={preSubmitModalOpen}
         hideModal={() => setPreSubmitModalOpen(false)}
-        onSubmit={() => navigate(`/${exam.id}/complete/overview`)}
+        onSubmit={submitExam}
       />
     </main>
   );
-
-  function submitAnswer(selectedAnswerIndex: number) {
-    const newQuestions = [...questions];
-
-    newQuestions[currentQuestion!.index].selectedAnswerIndex =
-      selectedAnswerIndex;
-
-    dispatch(
-      editCategoriesResults({
-        category: category!,
-        question: currentQuestion!,
-        selectedAnswerIndex,
-      })
-    );
-
-    setQuestions(newQuestions);
-  }
 
   function resetExam() {
     dispatch(_resetExam());
@@ -589,7 +697,7 @@ const RunPage: React.FC = () => {
     setQuestions(
       questions.map((question) => ({
         ...question,
-        selectedAnswerIndex: undefined,
+        selectedAnswerId: undefined,
       }))
     );
     changeQuestion({ ...questions[0], index: 0 });
@@ -605,10 +713,13 @@ const AnswerButton: React.FC<
     <button
       {...rest}
       className={c(
-        'rounded-md py-[3vh] px-[1vw] text-small-title font-extralight transition hover:scale-105 hover:shadow-md active:scale-95 active:brightness-95',
+        'rounded-md py-[2vh] px-[1vw] text-lg font-extralight transition md:text-small-title',
         selected
           ? 'bg-theme-blue text-white'
           : 'border border-theme-light-gray bg-white text-theme-medium-gray',
+        rest.disabled
+          ? 'brightness-90'
+          : 'hover:scale-105 hover:shadow-md active:scale-95 active:brightness-95',
         rest.className
       )}
     >
@@ -635,7 +746,7 @@ const QuestionNavigationButton: React.FC<
   >
     <img
       alt="left arrow icon"
-      src={`images/icon_arrow.svg`}
+      src={p(`images/icon_arrow.svg`)}
       className={c(
         'w-10 transition ease-in',
         dir === 'right' && 'rotate-180',
@@ -648,7 +759,7 @@ const QuestionNavigationButton: React.FC<
     />
     <img
       alt="end test icon"
-      src={`images/icon_end_test.svg`}
+      src={p(`images/icon_end_test.svg`)}
       className={c(
         'absolute top-1/2 w-10 -translate-y-1/2 transition ease-out',
         done ? 'scale-100 opacity-100' : 'scale-0 opacity-0'

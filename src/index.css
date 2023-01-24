@@ -6,6 +6,21 @@ html,
 body,
 #root {
   @apply flex min-h-full flex-1 flex-col;
+
+  .carousel.carousel-slider {
+    @apply h-full;
+    overflow-x: clip;
+    overflow-y: visible;
+
+    .slider-wrapper {
+      overflow-x: clip;
+      overflow-y: visible;
+    }
+  }
+}
+
+body {
+  background-color: #f3f3f3;
 }
 
 /* Chrome, Safari, Edge, Opera */

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 import { Question } from '../../types';
-import ImageModal from './ImageModal';
+import { ImageModal } from '../common';
 
 interface ExplanationTabProps extends React.HTMLAttributes<HTMLDivElement> {
   question: Question;
@@ -27,7 +27,7 @@ const ExplanationTab: React.FC<ExplanationTabProps> = ({
         )}
       >
         <button className="ml-auto" onClick={closeExplanationTab}>
-          <img alt="exit icon" src="images/icon_x.svg" className="w-6" />
+          <img alt="exit icon" src={p('images/icon_x.svg')} className="w-6" />
         </button>
         <div className="mb-[5vh]">
           <p className="mb-[2vh] text-theme-light-gray">Question</p>
@@ -60,7 +60,7 @@ const ExplanationTab: React.FC<ExplanationTabProps> = ({
             <p className="text-justify">{question.explanation}</p>
           </div>
           <div className="flex flex-1 flex-col px-6 py-4">
-            <p className="mb-[3vh]">
+            <p className="mb-[2vh]">
               <b>Additional Information:</b>
             </p>
             <div className="flex flex-1 flex-col justify-between">
@@ -74,7 +74,7 @@ const ExplanationTab: React.FC<ExplanationTabProps> = ({
                 >
                   <img
                     alt="information icon"
-                    src={getInformationIcon(information.type)}
+                    src={p(getInformationIcon(information.type))}
                     className="h-5 w-5"
                   />
                   <span>{information.name}</span>

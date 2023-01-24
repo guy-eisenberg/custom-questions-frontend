@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import _ from 'lodash';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCustomizations, postCustomization } from '../api';
 import {
@@ -14,7 +14,7 @@ import {
   ToggleButton,
 } from '../components';
 import { useDispatch, useExam, useLoadingScreen } from '../hooks';
-import { tempId } from '../lib';
+import { p, tempId } from '../lib';
 import { setCustomization } from '../redux';
 import { Customization } from '../types';
 
@@ -52,26 +52,14 @@ const CustomizationPage: React.FC = () => {
     Customization | undefined
   >();
 
-  const [minutes, setMinutes] = useState('');
-  const [seconds, setSeconds] = useState('');
-  const [questionQuantity, setQuestionQuantity] = useState('');
+  const [minutes, setMinutes] = useState('12');
+  const [seconds, setSeconds] = useState('30');
+  const [questionQuantity, setQuestionQuantity] = useState('15');
   const [coPilotActivated, setCoPilotActivated] = useState(true);
 
   const [disabledCateogiresIds, setDisabledCateogriesIds] = useState<string[]>(
     []
   );
-
-  useEffect(() => {
-    if (loadedCustomization !== undefined)
-      return () => setLoadedCustomization(undefined);
-  }, [
-    loadedCustomization,
-    minutes,
-    seconds,
-    questionQuantity,
-    coPilotActivated,
-    disabledCateogiresIds,
-  ]);
 
   useLoadingScreen(customizationsLoading || mutateCustomizationsLoading);
 
@@ -79,14 +67,18 @@ const CustomizationPage: React.FC = () => {
     <main className="flex flex-1 flex-col">
       <Navbar className="h-14" minified mobileBackButton />
       <div className="relative lg:flex lg:flex-1 lg:items-center lg:justify-center">
-        <div className="w-full max-w-7xl bg-white p-8 lg:rounded-md lg:border lg:border-theme-light-gray lg:py-4">
+        <div className="w-full max-w-7xl bg-white p-8 shadow-md lg:rounded-md lg:py-4">
           <div className="flex justify-between">
             <span className="text-small-title font-semibold text-theme-dark-gray">
               New Customization
             </span>
             <Button className="hidden items-center gap-2 lg:flex" color="gray">
               Get help with Exam Customization{' '}
-              <img alt="help icon" src="images/icon_help.svg" className="h-5" />
+              <img
+                alt="help icon"
+                src={p('images/icon_help.svg')}
+                className="h-5"
+              />
             </Button>
           </div>
           <p className="my-[3vh] text-sm text-theme-medium-gray">
@@ -103,14 +95,22 @@ const CustomizationPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <NumberInput
                       value={minutes}
-                      onChange={(e) => setMinutes(e.target.value)}
+                      onChange={(e) => {
+                        setMinutes(e.target.value);
+
+                        setLoadedCustomization(undefined);
+                      }}
                     />
                     <span>minutes</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <NumberInput
                       value={seconds}
-                      onChange={(e) => setSeconds(e.target.value)}
+                      onChange={(e) => {
+                        setSeconds(e.target.value);
+
+                        setLoadedCustomization(undefined);
+                      }}
                     />
                     <span>seconds</span>
                   </div>
@@ -123,7 +123,11 @@ const CustomizationPage: React.FC = () => {
                 <NumberInput
                   className="w-20"
                   value={questionQuantity}
-                  onChange={(e) => setQuestionQuantity(e.target.value)}
+                  onChange={(e) => {
+                    setQuestionQuantity(e.target.value);
+
+                    setLoadedCustomization(undefined);
+                  }}
                 />
               </LabeledBox>
               <LabeledBox label="CoPilot Mode">
@@ -138,7 +142,11 @@ const CustomizationPage: React.FC = () => {
                       className="mt-[1vh] !w-[80px] border border-theme-light-gray bg-[#f9f9f9] after:w-[35px] after:!bg-theme-blue"
                       color="blue"
                       isChecked={coPilotActivated}
-                      onToggle={setCoPilotActivated}
+                      onToggle={(toggled) => {
+                        setCoPilotActivated(toggled);
+
+                        setLoadedCustomization(undefined);
+                      }}
                       textColor="#c6c6c6"
                       upperCase
                     />
@@ -156,7 +164,11 @@ const CustomizationPage: React.FC = () => {
                   <CategoriesBox
                     className="w-full flex-1 overflow-y-auto lg:w-3/4 lg:basis-0"
                     disabledCateogiresIds={disabledCateogiresIds}
-                    setDisabledCateogriesIds={setDisabledCateogriesIds}
+                    setDisabledCateogriesIds={(disabledCateogriesIds) => {
+                      setDisabledCateogriesIds(disabledCateogriesIds);
+
+                      setLoadedCustomization(undefined);
+                    }}
                     categories={exam.categories}
                   />
                 </div>
@@ -206,7 +218,7 @@ const CustomizationPage: React.FC = () => {
         >
           <img
             alt="arrow icon"
-            src="images/icon_arrow.svg"
+            src={p('images/icon_arrow.svg')}
             className="h-2 opacity-60"
           />
           Return to Main Menu

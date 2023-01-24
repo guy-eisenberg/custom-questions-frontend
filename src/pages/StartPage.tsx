@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { StartPageButton } from '../components';
 import { useDispatch, useExam } from '../hooks';
+import { p } from '../lib';
 import { setTrainingMode } from '../redux';
 
 const StartPage: React.FC = () => {
@@ -11,6 +12,8 @@ const StartPage: React.FC = () => {
   const dispatch = useDispatch();
 
   if (!exam) return null;
+
+  console.log(exam);
 
   return (
     <main className="flex flex-1 flex-col items-center gap-[12vh] px-4 py-6 text-center text-theme-dark-gray md:justify-center">
@@ -58,7 +61,7 @@ const StartPage: React.FC = () => {
       </div>
       <img
         alt="logo"
-        src="images/logo.svg"
+        src={p('images/logo.svg')}
         className="bottom-4 mt-auto w-1/2 md:absolute md:bottom-[1vw] md:left-[1vw] md:w-[10%]"
       />
     </main>

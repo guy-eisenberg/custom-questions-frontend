@@ -20,6 +20,11 @@ export interface DBExam {
   question_map: string;
   // skill_categories: SkillCategory[];
   categories: DBCategory[];
+  custom_content?: {
+    id: string;
+    type: ExamCustomContentType;
+    content: any;
+  };
 }
 
 export interface Exam {
@@ -39,12 +44,19 @@ export interface Exam {
   duration: number;
   question_duration: number;
   allow_user_navigation: boolean;
-  strong_pass: number;
-  weak_pass: number;
+  strong_pass?: number;
+  weak_pass?: number;
   question_map: boolean;
   // skill_categories: SkillCategory[];
   categories: Category[];
+  custom_content?: {
+    id: string;
+    type: ExamCustomContentType;
+    content: any;
+  };
 }
+
+export type ExamCustomContentType = 'text' | 'image' | 'tabs';
 
 export interface DBCategory {
   id: string;

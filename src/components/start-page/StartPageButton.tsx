@@ -1,4 +1,4 @@
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 
 interface StartPageButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
   color?: 'blue' | 'green' | 'white';
@@ -23,7 +23,11 @@ const StartPageButton: React.FC<StartPageButtonProps> = ({
         rest.className
       )}
     >
-      <img alt="button icon" src={`images/${icon}`} className="h-6 md:h-12" />
+      <img
+        alt="button icon"
+        src={p(`images/${icon}`)}
+        className="h-6 md:h-12"
+      />
       {children}
     </button>
   );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from '../../hooks';
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 import { Question } from '../../types';
 import { Button } from '../core';
 
@@ -9,7 +9,7 @@ interface QuestionMapProps extends React.HTMLAttributes<HTMLDivElement> {
   closeQuestionMap: () => void;
   jumpToQuestion: (question: number) => void;
   currentQuestion: number;
-  questions: (Question & { selectedAnswerIndex?: number })[];
+  questions: (Question & { selectedAnswerId?: string })[];
 }
 
 const QuestionMap: React.FC<QuestionMapProps> = ({
@@ -35,24 +35,21 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
       )}
     >
       <button onClick={closeQuestionMap}>
-        <img alt="exit icon" src="images/icon_x.svg" className="w-6" />
+        <img alt="exit icon" src={p('images/icon_x.svg')} className="w-6" />
       </button>
       <div className="my-[3vh] flex flex-1 flex-col rounded-[0.2rem] border border-theme-light-gray text-theme-dark-gray">
         <p className="border-b border-theme-light-gray px-4 py-3">
           <b>Question Map</b>
         </p>
-        <div className="grid max-h-[40vh] grid-cols-5 gap-[1vw] overflow-y-auto overflow-x-hidden border-b border-theme-light-gray bg-[#f4f4f4] p-6 scrollbar-thin scrollbar-thumb-theme-light-gray scrollbar-thumb-rounded-full md:grid-cols-6">
+        <div className="grid max-h-[40vh] grid-cols-5 gap-[1vw] overflow-y-auto border-b border-theme-light-gray bg-[#f4f4f4] p-6 overflow-x-hidden scrollbar-thin scrollbar-thumb-theme-light-gray scrollbar-thumb-rounded-full md:grid-cols-6">
           {questions.map((_, i) => (
             <QuestionCircle
               className={c(
                 (i + 1 === currentQuestion ||
-                  questions[i].selectedAnswerIndex !== undefined) &&
-                  (trainingMode &&
-                  questions[i].selectedAnswerIndex !== undefined
-                    ? questions[i].selectedAnswerIndex ===
-                      questions[i].answers.findIndex(
-                        (answer) => answer.is_right
-                      )
+                  questions[i].selectedAnswerId !== undefined) &&
+                  (trainingMode && questions[i].selectedAnswerId !== undefined
+                    ? questions[i].selectedAnswerId ===
+                      questions[i].answers.find((answer) => answer.is_right)!.id
                       ? '!bg-theme-green text-white'
                       : '!bg-theme-red text-white'
                     : trainingMode
@@ -63,7 +60,7 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
                   '!bg-[#1b8ac0] text-white',
                 i + 1 !== currentQuestion &&
                   selectedQuestion !== i + 1 &&
-                  questions[i].selectedAnswerIndex !== undefined &&
+                  questions[i].selectedAnswerId !== undefined &&
                   'opacity-50'
               )}
               label={i + 1}
