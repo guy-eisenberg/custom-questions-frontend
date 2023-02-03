@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     host: true,
   },
+  base: './',
   build: {
     assetsDir: '',
   },
