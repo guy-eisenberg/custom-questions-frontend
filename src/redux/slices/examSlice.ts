@@ -59,6 +59,55 @@ const examSlice = createSlice({
     setMode(state, action: { payload: ExamMode }) {
       state.mode = action.payload;
     },
+    resetCategoriesResults(
+      state,
+      action: {
+        payload: { question: Question; category: Category }[];
+      }
+    ) {
+      const newResults = { ...state.categoriesResults };
+
+      action.payload.forEach(({ question, category }) => {
+        if (category.parent_category_id) {
+          if (newResults[category.parent_category_id] === undefined)
+            newResults[category.parent_category_id] = {
+              questions: {},
+              subCategories: {},
+            };
+
+          if (
+            newResults[category.parent_category_id].subCategories[
+              category.id
+            ] === undefined
+          )
+            newResults[category.parent_category_id].subCategories[category.id] =
+              {
+                questions: {},
+                subCategories: {},
+              };
+
+          newResults[category.parent_category_id].subCategories[
+            category.id
+          ].questions[question.id] = {
+            ...question,
+            selectedAnswerId: undefined,
+          };
+        } else {
+          if (newResults[category.id] === undefined)
+            newResults[category.id] = {
+              questions: {},
+              subCategories: {},
+            };
+
+          newResults[category.id].questions[question.id] = {
+            ...question,
+            selectedAnswerId: undefined,
+          };
+        }
+      });
+
+      state.categoriesResults = newResults;
+    },
     editCategoriesResults(
       state,
       action: {
@@ -133,6 +182,7 @@ export const {
   setTrainingMode,
   setMode,
   setCustomization,
+  resetCategoriesResults,
   editCategoriesResults,
   resetExam,
 } = examSlice.actions;

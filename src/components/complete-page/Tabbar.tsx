@@ -28,15 +28,16 @@ const Tabbar: React.FC<TabbarProps> = ({ tab, setTab, ...rest }) => {
   return (
     <div
       {...rest}
-      className={c('relative flex gap-6 bg-white px-12', rest.className)}
+      className={c(
+        'relative flex gap-6 border-b border-[#e0e0e0] bg-white px-12 font-semibold',
+        rest.className
+      )}
     >
       <button
         onClick={() => setTab('overview')}
         className={c(
           'h-full',
-          tab === 'overview'
-            ? 'text-theme-extra-dark-gray'
-            : 'text-theme-light-gray'
+          tab === 'overview' ? 'text-[#646464]' : 'text-theme-light-gray'
         )}
         ref={overviewButtonRef}
       >
@@ -46,16 +47,14 @@ const Tabbar: React.FC<TabbarProps> = ({ tab, setTab, ...rest }) => {
         onClick={() => setTab('feedback')}
         className={c(
           'h-full',
-          tab === 'feedback'
-            ? 'text-theme-extra-dark-gray'
-            : 'text-theme-light-gray'
+          tab === 'feedback' ? 'text-[#646464]' : 'text-theme-light-gray'
         )}
         ref={feedbackButtonRef}
       >
         Feedback
       </button>
       <div
-        className="left:0 absolute top-full h-[3px] w-8 -translate-y-full rounded-t-md bg-theme-blue transition-all"
+        className="left:0 absolute top-full h-[3px] w-8 -translate-y-full rounded-t-md bg-[#3793d1] transition-all"
         style={{
           width: activatedButton?.clientWidth,
           left: activatedButton?.offsetLeft,

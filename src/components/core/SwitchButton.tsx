@@ -17,10 +17,10 @@ const SwitchButton: React.FC<SwitchButtonProps> = ({ checked, ...rest }) => {
           checked ? 'after:translate-x-0' : 'after:-translate-x-[32px]'
         )}
       >
-        <span className="absolute top-1/2 right-2 -translate-y-1/2 select-none text-xs text-theme-light-gray">
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 select-none text-xs text-theme-light-gray">
           Off
         </span>
-        <span className="absolute top-1/2 left-2 -translate-y-1/2 select-none text-xs text-theme-light-gray">
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 select-none text-xs text-theme-light-gray">
           On
         </span>
       </div>

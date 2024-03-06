@@ -7,7 +7,9 @@ export type AnsweredQuestion = Question & {
   selectedAnswerId?: string;
 };
 
-const FeedbackTab: React.FC = () => {
+const FeedbackTab: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  ...rest
+}) => {
   const [selectedQuestion, _setSelectedQuestion] = useState<
     AnsweredQuestion | undefined
   >(undefined);
@@ -25,9 +27,9 @@ const FeedbackTab: React.FC = () => {
     <>
       {/* NOTE: Desktop */}
 
-      <div className="hidden min-h-0 w-full flex-1 basis-0 md:flex">
+      <div {...rest} className="hidden min-h-0 w-full flex-1 basis-0 md:flex">
         <CategoriesResultsList
-          className="w-1/4 md:border-r md:border-r-[#dfdfdf]"
+          className="w-1/3 md:border-r md:border-r-[#dfdfdf] lg:w-1/4"
           selectedQuestion={selectedQuestion}
           setSelectedQuestion={setSelectedQuestion}
         />
@@ -39,10 +41,10 @@ const FeedbackTab: React.FC = () => {
       </div>
 
       {/* NOTE: Mobile */}
-      <div className="md:hidden">
+      <div {...rest} className="md:hidden">
         {selectedQuestion ? (
           <SelectedQuestionContainer
-            className="absolute top-0 bottom-0 z-10"
+            className="absolute bottom-0 left-0 right-0 top-0 z-10"
             selectedQuestion={selectedQuestion}
             setSelectedQuestion={setSelectedQuestion}
           />

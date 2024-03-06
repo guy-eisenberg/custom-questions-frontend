@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { c } from '../../lib';
 import { Customization } from '../../types';
 import { Button, Modal, ModalProps } from '../core';
+import LabeledBox from './LabaledBox';
 
 interface LoadModalProps extends ModalProps {
   customizations: Customization[];
@@ -25,52 +26,62 @@ const LoadModal: React.FC<LoadModalProps> = ({
 
   return (
     <Modal {...rest} className={c('flex flex-col', rest.className)}>
-      <p className="text-small-title font-semibold text-theme-dark-gray">
-        Load Customization
-      </p>
-      <ul className="my-[2vh] border border-theme-light-gray bg-[#f9f9f9]">
-        {customizations
-          .sort(
-            (cust1, cust2) =>
-              cust2.time_added.getTime() - cust1.time_added.getTime()
-          )
-          .map((customization, i) => (
-            <li
-              className={c(
-                i < 4 && 'border-b border-b-theme-light-gray last:border-none'
-              )}
-              key={customization.id}
-            >
-              <button
-                className={c(
-                  'group flex w-full justify-between bg-[#f9f9f9] px-3 py-2 transition hover:bg-theme-blue/75',
-                  i === selectedIndex && '!bg-theme-blue'
-                )}
-                onClick={() => setSelectedIndex(i)}
+      <p className="text-xl font-medium text-[#555555]">Load Customization</p>
+      <LabeledBox
+        className="mb-[2vh] mt-[3vh] overflow-hidden"
+        label="Customizations"
+        noPadding
+      >
+        <div className="flex border-b border-b-theme-border bg-[#f7f7f7] px-[2vh] py-3 font-semibold text-[#999999]">
+          <span className="flex-1">Name</span>
+          <span className="flex-1">Date & Time</span>
+        </div>
+        <ul>
+          {customizations
+            .sort(
+              (cust1, cust2) =>
+                cust2.time_added.getTime() - cust1.time_added.getTime()
+            )
+            .map((customization, i) => (
+              <li
+                className={c(i < 4 && 'border- border-b last:border-none')}
+                key={customization.id}
               >
-                <span
+                <button
                   className={c(
-                    'text-theme-dark-gray group-hover:text-white',
-                    i === selectedIndex && '!text-white'
+                    'group flex w-full px-[2vh] py-4 text-left transition',
+                    i === selectedIndex ? '!bg-[#33bde4]' : 'bg-white'
                   )}
+                  onClick={() => setSelectedIndex(i)}
                 >
-                  {customization.name}
-                </span>
-                <span
-                  className={c(
-                    'text-theme-light-gray group-hover:text-white',
-                    i === selectedIndex && '!text-white'
-                  )}
-                >
-                  {customization.time_added
-                    .toLocaleTimeString()
-                    .replace(/(.*)\D\d+/, '$1')}{' '}
-                  on {customization.time_added.toLocaleDateString()}
-                </span>
-              </button>
-            </li>
-          ))}
-      </ul>
+                  <span
+                    className={c(
+                      'flex-1 group-hover:text-white',
+                      i === selectedIndex
+                        ? '!text-white'
+                        : '!text-theme-dark-gray'
+                    )}
+                  >
+                    {customization.name}
+                  </span>
+                  <span
+                    className={c(
+                      'flex-1 text-theme-light-gray group-hover:text-white',
+                      i === selectedIndex
+                        ? '!text-white'
+                        : '!text-theme-dark-gray'
+                    )}
+                  >
+                    {customization.time_added
+                      .toLocaleTimeString()
+                      .replace(/(.*)\D\d+/, '$1')}{' '}
+                    on {customization.time_added.toLocaleDateString()}
+                  </span>
+                </button>
+              </li>
+            ))}
+        </ul>
+      </LabeledBox>
       <div className="ml-auto flex gap-6">
         <Button color="gray" onClick={rest.hideModal}>
           Cancel
@@ -81,7 +92,7 @@ const LoadModal: React.FC<LoadModalProps> = ({
             if (selectedIndex !== undefined) load(selectedIndex);
           }}
         >
-          Load Customization
+          Load
         </Button>
       </div>
     </Modal>

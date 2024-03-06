@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { getExam } from '../api';
-import { Exam } from '../types';
 import useLoadingScreen from './useLoadingScreen';
 import useParams from './useParams';
 
@@ -11,14 +10,14 @@ function useExam() {
     isLoading,
     isError,
     data: exam,
-  } = useQuery(['exam'], () => getExam(examId, questions), {
+  } = useQuery(['exam', examId], () => getExam(examId, questions), {
     retry: 0,
     staleTime: Infinity,
   });
 
   useLoadingScreen(isLoading && !isError);
 
-  if (isError || (!isLoading && !exam)) throw new Error('Error');
+  // if (isError || (!isLoading && !exam)) throw new Error('Error');
 
   //{ TODO: DELETE! }
   // return {
@@ -41,7 +40,7 @@ function useExam() {
   //   categories: [] as Category[],
   // };
 
-  return exam as Exam;
+  return { exam: exam, isLoading, isError };
 }
 
 export default useExam;

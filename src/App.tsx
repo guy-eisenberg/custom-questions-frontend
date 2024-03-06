@@ -1,7 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { Provider } from 'react-redux';
-import { createHashRouter, RouterProvider } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { Provider } from "react-redux";
+import { HashRouter, Route, Routes } from "react-router-dom";
+import { getActivityInfo } from "./api";
+import { useLoadingScreen } from "./hooks";
 import {
   CompletePage,
   CustomizationPage,
@@ -9,61 +11,90 @@ import {
   RouteErrorPage,
   RunPage,
   StartPage,
-} from './pages';
-import { store } from './redux';
-
-const router = createHashRouter([
-  {
-    path: '/',
-    index: true,
-    element: <RouteErrorPage />,
-    errorElement: <RouteErrorPage />,
-  },
-  {
-    path: '/:examId',
-    element: <StartPage />,
-    errorElement: <RouteErrorPage />,
-  },
-  {
-    path: '/:examId/select-type',
-    element: <ExamTypePage />,
-    errorElement: <RouteErrorPage />,
-  },
-  {
-    path: '/:examId/customize',
-    element: <CustomizationPage />,
-    errorElement: <RouteErrorPage />,
-  },
-  {
-    path: '/:examId/run',
-    element: <RunPage />,
-    errorElement: <RouteErrorPage />,
-  },
-  {
-    path: '/:examId/complete/*',
-    element: <CompletePage />,
-    errorElement: <RouteErrorPage />,
-  },
-]);
+} from "./pages";
+import { store } from "./redux";
 
 const queryClient = new QueryClient();
 
 function App() {
+  const [activityInfo, setActivityInfo] = useState<
+    { id: string; name: string; help_hyperlink: string } | undefined
+  >();
+  const [activityInfoLoading, setActivityInfoLoading] = useState(true);
+
+  const performanceUrl = `${
+    import.meta.env.VITE_PERFORMANCE_URL
+  }?filter-key=activity-${activityInfo?.id}-${activityInfo?.name}`;
+
   useEffect(() => {
-    document.addEventListener('contextmenu', preventContextMenu);
+    getActivityInfo()
+      .then(setActivityInfo)
+      .finally(() => setActivityInfoLoading(false));
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("contextmenu", preventContextMenu);
 
     return () =>
-      document.removeEventListener('contextmenu', preventContextMenu);
+      document.removeEventListener("contextmenu", preventContextMenu);
 
     function preventContextMenu(e: MouseEvent) {
       e.preventDefault();
     }
   }, []);
 
+  useLoadingScreen(activityInfoLoading);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <RouterProvider router={router} />
+        <HashRouter>
+          <Routes>
+            <Route
+              index
+              path="/"
+              element={<RouteErrorPage />}
+              errorElement={<RouteErrorPage />}
+            />
+            <Route
+              path="/:examId"
+              element={
+                <StartPage
+                  helpHyperlink={activityInfo?.help_hyperlink || ""}
+                  performanceUrl={performanceUrl}
+                />
+              }
+              errorElement={<RouteErrorPage />}
+            />
+            <Route
+              path="/:examId/select-type"
+              element={<ExamTypePage />}
+              errorElement={<RouteErrorPage />}
+            />
+            <Route
+              path="/:examId/customize"
+              element={<CustomizationPage />}
+              errorElement={<RouteErrorPage />}
+            />
+            <Route
+              path="/:examId/run"
+              element={
+                <RunPage helpHyperlink={activityInfo?.help_hyperlink || ""} />
+              }
+              errorElement={<RouteErrorPage />}
+            />
+            <Route
+              path="/:examId/complete/*"
+              element={
+                <CompletePage
+                  performanceUrl={performanceUrl}
+                  helpHyperlink={activityInfo?.help_hyperlink || ""}
+                />
+              }
+              errorElement={<RouteErrorPage />}
+            />
+          </Routes>
+        </HashRouter>
       </Provider>
     </QueryClientProvider>
   );

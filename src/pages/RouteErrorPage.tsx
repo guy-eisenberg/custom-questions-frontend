@@ -1,6 +1,5 @@
 import { useNavigate, useRouteError } from 'react-router-dom';
 import { Button } from '../components';
-import { p } from '../lib';
 
 const RouteErrorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -9,20 +8,13 @@ const RouteErrorPage: React.FC = () => {
   console.error(error);
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-4 py-6 text-center text-theme-extra-dark-gray">
-      <div className="mb-12">
-        <img
-          alt="broken link icon"
-          src={p('images/icon_broken_link.svg')}
-          className="mx-auto mb-8 w-56"
-        />
-        <h1 className="text-title">Houston, we have a problem!</h1>
-      </div>
-      <p className="mb-24 text-small-title">
-        We are unable to locate the resource you are looking for, it may have
-        moved or been deleted.
+    <main className="flex flex-1 flex-col items-center justify-center gap-16 px-4 py-6 text-center text-theme-extra-dark-gray">
+      <p className="text-3xl font-semibold text-theme-medium-gray">
+        You cannot access this page directly.
       </p>
-      <Button onClick={() => navigate(-1)}>Go Back</Button>
+      <Button className="bg-theme-medium-gray" onClick={() => navigate(-1)}>
+        Go back to Activities
+      </Button>
     </main>
   );
 };

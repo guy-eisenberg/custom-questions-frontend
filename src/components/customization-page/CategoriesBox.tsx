@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { c, p } from '../../lib';
-import { Category } from '../../types';
-import { Button } from '../core';
+import { useMemo, useState } from "react";
+import { c, p } from "../../lib";
+import { Category } from "../../types";
+import { Button } from "../core";
 
 interface CategoriesBoxProps extends React.HTMLAttributes<HTMLUListElement> {
   categories: Category[];
@@ -19,16 +19,22 @@ const CategoriesBox: React.FC<CategoriesBoxProps> = ({
     number | undefined
   >();
 
+  const sortedCategories = useMemo(() => {
+    return categories.sort((c1, c2) => {
+      return c1.name.localeCompare(c2.name);
+    });
+  }, [categories]);
+
   return (
     <>
       <ul
         {...rest}
         className={c(
-          'flex flex-col gap-2 border border-theme-light-gray bg-[#f9f9f9] p-4',
+          "flex flex-col gap-2 rounded-md border border-[#e5e5e5] bg-[#f7f7f7] p-4",
           rest.className
         )}
       >
-        {categories.map((category, i) => (
+        {sortedCategories.map((category, i) => (
           <CategoryRow
             index={i}
             category={category}
@@ -49,7 +55,6 @@ const CategoriesBox: React.FC<CategoriesBoxProps> = ({
         >
           Select All
         </Button>
-        <span className="text-theme-light-gray">|</span>
         <Button
           color="gray"
           className="!px-2 text-xs"
@@ -86,7 +91,7 @@ interface CategoryRowProps extends React.LiHTMLAttributes<HTMLLIElement> {
   disabledCateogiresIds: string[];
   setDisabledCateogriesIds: (ids: string[]) => void;
   category: Category;
-  type: 'category' | 'sub-category';
+  type: "category" | "sub-category";
   openCategoryIndex?: number | undefined;
   setOpenCategoryIndex?: (index: number | undefined) => void;
 }
@@ -101,49 +106,47 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
   setOpenCategoryIndex,
   ...rest
 }) => {
+  const sortedSubCategories = useMemo(() => {
+    return category.sub_categories.sort((c1, c2) => {
+      return c1.name.localeCompare(c2.name);
+    });
+  }, [category.sub_categories]);
+
   return (
     <li {...rest}>
-      <div className="flex items-center justify-between">
-        <button
-          className={c(
-            'flex items-center gap-2',
-            type === 'category' && 'text-lg',
-            type === 'sub-category' && 'text-sm',
-            category.sub_categories.length === 0 && 'cursor-default'
-          )}
-          onClick={() => {
-            if (category.sub_categories.length > 0 && setOpenCategoryIndex) {
-              if (i === openCategoryIndex) setOpenCategoryIndex(undefined);
-              else setOpenCategoryIndex(i);
-            }
-          }}
-        >
-          {category.name}
-          {category.sub_categories.length > 0 && (
-            <img
-              alt="arrow icon"
-              src={p('images/icon_arrow.svg')}
-              className={c(
-                'h-2 opacity-30 transition',
-                i === openCategoryIndex ? 'rotate-[270deg]' : 'rotate-180'
-              )}
-            />
-          )}
-        </button>
+      <button
+        className="flex w-full items-center gap-2"
+        onClick={() => {
+          if (sortedSubCategories.length > 0 && setOpenCategoryIndex) {
+            if (i === openCategoryIndex) setOpenCategoryIndex(undefined);
+            else setOpenCategoryIndex(i);
+          }
+        }}
+      >
+        {sortedSubCategories.length > 0 ? (
+          <img
+            alt="arrow icon"
+            src={p("images/light_grey_arrow.svg")}
+            className={c(
+              "w-[10px] transition",
+              i === openCategoryIndex ? "rotate-0" : "-rotate-90"
+            )}
+          />
+        ) : (
+          <div className="w-[10px]" />
+        )}
         {(() => {
-          var checked: boolean | 'half' = !disabledCateogiresIds.includes(
+          var checked: boolean | "half" = !disabledCateogiresIds.includes(
             category.id
           );
 
           if (checked) {
             if (
               disabledCateogiresIds.some((id) =>
-                category.sub_categories
-                  .map((category) => category.id)
-                  .includes(id)
+                sortedSubCategories.map((category) => category.id).includes(id)
               )
             ) {
-              checked = 'half';
+              checked = "half";
             }
           }
 
@@ -162,7 +165,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 
                   if (index !== -1) newDisabledCateogiresIds.splice(index, 1);
 
-                  category.sub_categories.forEach((category) => {
+                  sortedSubCategories.forEach((category) => {
                     const index = newDisabledCateogiresIds.indexOf(category.id);
 
                     if (index !== -1) newDisabledCateogiresIds.splice(index, 1);
@@ -170,7 +173,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
                 } else {
                   newDisabledCateogiresIds.push(
                     category.id,
-                    ...category.sub_categories
+                    ...sortedSubCategories
                       .filter(
                         (cateogry) =>
                           !newDisabledCateogiresIds.includes(cateogry.id)
@@ -181,23 +184,36 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 
                 setDisabledCateogriesIds(newDisabledCateogiresIds);
               }}
+              className={c(
+                type === "category" ? "h-4 w-4" : "h-[14px] w-[14px]"
+              )}
               full={checked && category.parent_category_id !== undefined}
             />
           );
         })()}
-      </div>
-      {type === 'category' && category.sub_categories.length > 0 && (
+        <span
+          className={c(
+            "flex items-center gap-2 text-sm",
+            type === "category" && "font-semibold text-[#6b6b6b]",
+            type === "sub-category" && "text-[#828282]",
+            sortedSubCategories.length === 0 && "cursor-default"
+          )}
+        >
+          {category.name}
+        </span>
+      </button>
+      {type === "category" && sortedSubCategories.length > 0 && (
         <ul
           className={c(
-            'ml-4 flex flex-col gap-1 overflow-hidden transition-all',
-            i === openCategoryIndex && 'mt-2'
+            "ml-4 flex flex-col gap-1 overflow-hidden transition-all",
+            i === openCategoryIndex && "mt-2"
           )}
           style={{
             maxHeight:
-              i === openCategoryIndex ? category.sub_categories.length * 24 : 0,
+              i === openCategoryIndex ? sortedSubCategories.length * 24 : 0,
           }}
         >
-          {category.sub_categories.map((category) => (
+          {sortedSubCategories.map((category) => (
             <CategoryRow
               index={i}
               disabledCateogiresIds={disabledCateogiresIds}
@@ -215,7 +231,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
 
 const Checkbox: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    checked: boolean | 'half';
+    checked: boolean | "half";
     onToggle: () => void;
     full?: boolean;
   }
@@ -224,32 +240,26 @@ const Checkbox: React.FC<
     <button
       {...rest}
       className={c(
-        'relative h-4 w-4 rounded-sm',
-        checked
-          ? full
-            ? 'bg-theme-light-gray'
-            : 'bg-theme-blue'
-          : 'border border-theme-light-gray bg-white',
+        "relative flex items-center justify-center rounded-[3px] border border-[#e2e2e2] bg-[#efefef]",
+        checked ? (full ? "" : "border-0 !bg-theme-dark-blue") : "",
         rest.className
       )}
       onClick={onToggle}
     >
-      <img
-        alt="check icon"
-        src={p('images/icon_check.svg')}
-        className={c(
-          'absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2',
-          checked === true ? 'opacity 100' : 'opacity-0'
-        )}
-      />
-      <img
-        alt="sub icon"
-        src={p('images/icon_sub.svg')}
-        className={c(
-          'absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2',
-          checked === 'half' ? 'opacity 100' : 'opacity-0'
-        )}
-      />
+      {checked === true && (
+        <img
+          alt="check icon"
+          src={p(`images/icon_check${full ? "_blue" : ""}.svg`)}
+          className="h-3 w-3"
+        />
+      )}
+      {checked === "half" && (
+        <img
+          alt="sub icon"
+          src={p("images/icon_sub.svg")}
+          className="h-3 w-3"
+        />
+      )}
     </button>
   );
 };

@@ -35,13 +35,13 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
       )}
     >
       <button onClick={closeQuestionMap}>
-        <img alt="exit icon" src={p('images/icon_x.svg')} className="w-6" />
+        <img alt="exit icon" src={p('images/icon_close.svg')} className="w-6" />
       </button>
-      <div className="my-[3vh] flex flex-1 flex-col rounded-[0.2rem] border border-theme-light-gray text-theme-dark-gray">
-        <p className="border-b border-theme-light-gray px-4 py-3">
-          <b>Question Map</b>
+      <div className="my-[3vh] flex flex-1 flex-col rounded-[0.2rem] border border-[#e0e0e0] text-theme-dark-gray">
+        <p className="border-b border-[#e1e1e1] px-4 py-3 text-sm font-semibold text-[#6b6b6b]">
+          Question Map
         </p>
-        <div className="grid max-h-[40vh] grid-cols-5 gap-[1vw] overflow-y-auto border-b border-theme-light-gray bg-[#f4f4f4] p-6 overflow-x-hidden scrollbar-thin scrollbar-thumb-theme-light-gray scrollbar-thumb-rounded-full md:grid-cols-6">
+        <div className="grid max-h-[40vh] grid-cols-5 gap-[1vw] overflow-y-auto overflow-x-hidden border-b border-[#e1e1e1] bg-[#f7f7f7] p-6 scrollbar-thin scrollbar-thumb-theme-light-gray scrollbar-thumb-rounded-full md:grid-cols-6">
           {questions.map((_, i) => (
             <QuestionCircle
               className={c(
@@ -77,15 +77,18 @@ const QuestionMap: React.FC<QuestionMapProps> = ({
           ))}
         </div>
         <div className="flex flex-1 flex-col px-4 py-3 text-theme-medium-gray">
-          <b className="text-small">Preview:</b>
-          <p className="mt-4">
-            {selectedQuestion
-              ? questions[selectedQuestion - 1].body
-              : questions[currentQuestion - 1].body}
-          </p>
+          <b className="text-[13.5px] font-semibold text-[#939393]">Preview:</b>
+          <div
+            className="mt-4 [&>img]:max-h-64"
+            dangerouslySetInnerHTML={{
+              __html: selectedQuestion
+                ? questions[selectedQuestion - 1].body
+                : questions[currentQuestion - 1].body,
+            }}
+          ></div>
           {allowNavigation && (
             <Button
-              className="mt-auto self-end"
+              className="mb-3 mr-3 mt-auto self-end"
               onClick={() => {
                 if (selectedQuestion) jumpToQuestion(selectedQuestion);
 

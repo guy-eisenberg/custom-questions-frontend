@@ -24,7 +24,7 @@ const TrainingModeModal: React.FC<TrainingModeModalProps> = ({
         )}
         className="mb-[2vh] h-10"
       />
-      <b className="mb-[2vh]">
+      <b className="mb-[2vh] text-center">
         Are you sure you want to {trainingMode ? 'disable' : 'enable'} training
         mode?
       </b>
@@ -35,7 +35,8 @@ const TrainingModeModal: React.FC<TrainingModeModalProps> = ({
       <div className="flex gap-6">
         <Button onClick={rest.hideModal}>Cancel</Button>
         <Button color="gray" onClick={onSubmit}>
-          {trainingMode ? 'Disable' : 'Enable'} Training Mode
+          {trainingMode ? 'Disable' : 'Enable'}{' '}
+          <span className="hidden sm:inline-block">Training Mode</span>
         </Button>
       </div>
     </Modal>

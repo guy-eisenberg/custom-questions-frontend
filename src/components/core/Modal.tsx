@@ -15,7 +15,7 @@ const Modal: React.FC<ModalProps> = ({
     <div
       {...rest}
       className={c(
-        'fixed top-0 right-0 bottom-0 left-0 z-20 flex items-center justify-center bg-black/40 transition-all',
+        'fixed bottom-0 left-0 right-0 top-0 z-20 flex items-center justify-center bg-black/40 transition-all',
         visible ? 'visible opacity-100' : 'invisible opacity-0'
       )}
       onClick={(e) => {
@@ -26,7 +26,7 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={c(
-          'max-w-[90%] rounded-md bg-white px-6 py-4 shadow-md',
+          'max-w-[90%] rounded-md bg-white px-10 py-6 shadow-md',
           rest.className
         )}
         onClick={(e) => e.stopPropagation()}

@@ -1,11 +1,17 @@
-import { c } from '../../lib';
+import { c, p } from '../../lib';
 
 interface LabeledBoxProps extends React.HTMLAttributes<HTMLDivElement> {
   label: string;
+  icon?: string;
+  noPadding?: boolean;
+  backgroundColor?: string;
 }
 
 const LabeledBox: React.FC<LabeledBoxProps> = ({
   label,
+  icon,
+  backgroundColor,
+  noPadding = false,
   children,
   ...rest
 }) => {
@@ -13,14 +19,23 @@ const LabeledBox: React.FC<LabeledBoxProps> = ({
     <div
       {...rest}
       className={c(
-        'flex flex-col rounded-[5px] border border-[#dddddd] text-small text-theme-medium-gray',
+        'flex flex-col overflow-hidden rounded-[5px] border border-[#dddddd] text-small text-[#898989]',
         rest.className
       )}
     >
-      <p className="border-b border-b-[#dddddd] px-[2vh] py-[1vh] font-semibold text-theme-dark-gray">
-        {label}
-      </p>
-      <div className="flex-1 p-[2vh]">{children}</div>
+      <div
+        className="flex items-center justify-between border-b border-b-[#dddddd] px-[20px] py-[13px] text-[15px] font-semibold text-theme-dark-gray lg:text-base"
+        style={{ boxShadow: 'inset 0 -5px 6px rgba(0, 0, 0, 0.025)' }}
+      >
+        <p>{label}</p>
+        {icon && <img alt="icon" className="h-4" src={p(`images/${icon}`)} />}
+      </div>
+      <div
+        className={c('flex-1', !noPadding && 'p-[2vh]')}
+        style={{ backgroundColor }}
+      >
+        {children}
+      </div>
     </div>
   );
 };

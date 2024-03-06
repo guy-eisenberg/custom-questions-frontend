@@ -1,68 +1,97 @@
-import { useNavigate } from 'react-router-dom';
-import { StartPageButton } from '../components';
-import { useDispatch, useExam } from '../hooks';
-import { p } from '../lib';
-import { setTrainingMode } from '../redux';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Navbar, StartPageButton } from "../components";
+import { useDispatch, useExam } from "../hooks";
+import { p } from "../lib";
+import { setTrainingMode } from "../redux";
 
-const StartPage: React.FC = () => {
+const StartPage: React.FC<{
+  helpHyperlink: string;
+  performanceUrl: string;
+}> = ({ helpHyperlink, performanceUrl }) => {
   const navigate = useNavigate();
 
-  const exam = useExam();
+  const { exam } = useExam();
 
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (!exam) return;
+
+    document.title = `PAT - ${exam.name}`;
+  }, [exam]);
+
   if (!exam) return null;
 
-  console.log(exam);
-
   return (
-    <main className="flex flex-1 flex-col items-center gap-[12vh] px-4 py-6 text-center text-theme-dark-gray md:justify-center">
-      <div className="w-full max-w-7xl">
-        <h1 className="text-small-title md:border-b md:border-b-theme-light-gray md:pb-[5vh] md:text-title">
+    <main className="flex flex-1 flex-col items-center gap-[8vh] bg-[#f6f6f6] text-center text-theme-dark-gray">
+      <Navbar
+        className="h-14 w-full"
+        minified
+        hideMode
+        showExitModal={() => window.close()}
+        performanceUrl={performanceUrl}
+        helpHyperlink={helpHyperlink}
+        endButtons="exit"
+      />
+      <div className="flex w-full max-w-7xl flex-col gap-8 px-4 md:my-12 md:gap-0 md:px-6 lg:px-14 xl:px-16 2xl:px-24">
+        <h1 className="text-small-title font-semibold text-[#474747] md:pb-[8vh] md:text-[45px]">
           {exam.name}
         </h1>
         <div className="mt-[3vh] grid w-full grid-cols-2 gap-[2vh] md:flex md:justify-between md:gap-[1vw]">
           <StartPageButton
-            icon="icon_start.svg"
+            icon="icon_start"
+            shadow
             color="blue"
             className="flex-1"
             onClick={() => {
               dispatch(setTrainingMode(false));
 
-              navigate('select-type');
+              navigate("select-type");
             }}
           >
             Start Exam
           </StartPageButton>
           {exam.training_mode && (
             <StartPageButton
-              icon="icon_mortarboard.svg"
+              icon="icon_training_mode"
+              shadow
               color="green"
               className="flex-1"
               onClick={() => {
                 dispatch(setTrainingMode(true));
 
-                navigate('select-type');
+                navigate("select-type");
               }}
             >
               Training Mode
             </StartPageButton>
           )}
-          <StartPageButton icon="icon_performance.svg" className="flex-1">
+          <StartPageButton
+            icon="icon_performance"
+            className="flex-1"
+            onClick={() => {
+              window.open(performanceUrl);
+            }}
+          >
             Performance
           </StartPageButton>
-          <StartPageButton icon="icon_help.svg" className="flex-1">
+          <StartPageButton
+            icon="icon_help"
+            className="flex-1"
+            onClick={() => window.open(helpHyperlink)}
+          >
             User Guide
           </StartPageButton>
-          <StartPageButton icon="icon_exam_builder.svg" className="flex-1">
+          <StartPageButton disabled icon="icon_exam_builder" className="flex-1">
             Exam Builder
           </StartPageButton>
         </div>
       </div>
       <img
         alt="logo"
-        src={p('images/logo.svg')}
-        className="bottom-4 mt-auto w-1/2 md:absolute md:bottom-[1vw] md:left-[1vw] md:w-[10%]"
+        src={p("images/logo.svg")}
+        className="bottom-4 mt-auto hidden w-64 md:absolute md:bottom-[1vw] md:left-[1vw] lg:block"
       />
     </main>
   );

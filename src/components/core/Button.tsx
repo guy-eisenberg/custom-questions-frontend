@@ -25,7 +25,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={c(
           'px-6 py-2 text-sm font-semibold transition duration-75',
           overrideClick && 'scale-95 brightness-95',
-          color === 'blue' && 'bg-theme-dark-blue text-white',
+          color === 'blue' && 'bg-[#00acdd] text-white',
           color === 'green' && 'bg-theme-green text-white',
           color === 'red' && 'bg-theme-red text-white',
           color === 'yellow' && 'bg-theme-yellow text-theme-extra-dark-gray',
@@ -39,6 +39,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           rest.className
         )}
         ref={ref}
+        style={{
+          color: rest.disabled ? '#adadad' : undefined,
+          backgroundColor: rest.disabled ? '#eaeaea' : undefined,
+        }}
       >
         {children}
       </button>

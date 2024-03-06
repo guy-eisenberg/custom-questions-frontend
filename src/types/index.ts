@@ -1,17 +1,22 @@
+export type TemplateType =
+  | 'horizontal-images'
+  | 'horizontal-letters'
+  | 'horizontal-text'
+  | 'vertical-text';
+
 export interface DBExam {
   id: string;
   name: string;
   question_quantity: string;
   show_results: string;
-  template_type:
-    | 'side-by-side-small'
-    | 'side-by-side-medium'
-    | 'side-by-side-big';
+  template_type: TemplateType;
   allow_copilot: string;
   customization_mode: string;
   training_mode: string;
   flag_questions: string;
   exam_builder: string;
+  random_answer_order: boolean;
+  hide_question_body_preview: boolean;
   duration: string;
   question_duration: string;
   allow_user_navigation: string;
@@ -25,6 +30,8 @@ export interface DBExam {
     type: ExamCustomContentType;
     content: any;
   };
+  max_questions: string | null;
+  min_questions: string | null;
 }
 
 export interface Exam {
@@ -32,15 +39,14 @@ export interface Exam {
   name: string;
   question_quantity: number;
   show_results: boolean;
-  template_type:
-    | 'side-by-side-small'
-    | 'side-by-side-medium'
-    | 'side-by-side-big';
+  template_type: TemplateType;
   allow_copilot: boolean;
   customization_mode: boolean;
   training_mode: boolean;
   flag_questions: boolean;
   exam_builder: boolean;
+  hide_question_body_preview: boolean;
+  random_answer_order: boolean;
   duration: number;
   question_duration: number;
   allow_user_navigation: boolean;
@@ -54,6 +60,8 @@ export interface Exam {
     type: ExamCustomContentType;
     content: any;
   };
+  max_questions: number | null;
+  min_questions: number | null;
 }
 
 export type ExamCustomContentType = 'text' | 'image' | 'tabs';
@@ -134,3 +142,13 @@ export interface Customization {
   copilot_activated: boolean;
   disabled_categories: string[];
 }
+
+export interface Result {
+  id: string;
+  score: number;
+  start_time: number;
+  end_time: number;
+  mode: 'normal' | 'training';
+}
+
+export type Median = 'below' | 'average' | 'above';

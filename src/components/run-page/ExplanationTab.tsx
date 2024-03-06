@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { c, p } from '../../lib';
-import { Question } from '../../types';
+import { Question, TemplateType } from '../../types';
 import { ImageModal } from '../common';
 
 interface ExplanationTabProps extends React.HTMLAttributes<HTMLDivElement> {
+  templateType: TemplateType;
   question: Question;
   closeExplanationTab: () => void;
 }
 
 const ExplanationTab: React.FC<ExplanationTabProps> = ({
+  templateType,
   question,
   closeExplanationTab,
   ...rest
@@ -16,6 +18,35 @@ const ExplanationTab: React.FC<ExplanationTabProps> = ({
   const rightAnswer = question.answers.find((answer) => answer.is_right)!;
 
   const [showImageModal, setShowImageModal] = useState(false);
+
+  const [image, setImage] = useState<string | undefined>();
+
+  const answerBody = useMemo(() => {
+    switch (templateType) {
+      case 'horizontal-images':
+        return (
+          <button
+            className="transition hover:scale-105 hover:brightness-90"
+            onClick={() => {
+              setImage(rightAnswer.body as string);
+              setShowImageModal(true);
+            }}
+          >
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <img
+              className="h-48 w-48 object-contain"
+              src={rightAnswer.body as string}
+            />
+          </button>
+        );
+      case 'horizontal-letters':
+        return String.fromCharCode(
+          65 + question.answers.findIndex((answer) => answer.is_right)
+        );
+      default:
+        return rightAnswer.body;
+    }
+  }, [question.answers, templateType, rightAnswer]);
 
   return (
     <>
@@ -27,28 +58,42 @@ const ExplanationTab: React.FC<ExplanationTabProps> = ({
         )}
       >
         <button className="ml-auto" onClick={closeExplanationTab}>
-          <img alt="exit icon" src={p('images/icon_x.svg')} className="w-6" />
+          <img
+            alt="exit icon"
+            src={p('images/icon_close.svg')}
+            className="w-6"
+          />
         </button>
         <div className="mb-[5vh]">
-          <p className="mb-[2vh] text-theme-light-gray">Question</p>
-          <p className="text-small-title font-extralight">{question?.body}</p>
+          <p className="mb-[2vh] text-[15px] font-medium text-theme-light-gray">
+            Question
+          </p>
+          <div
+            className="text-small-title [&>img]:max-h-64"
+            dangerouslySetInnerHTML={{ __html: question?.body || '' }}
+          ></div>
         </div>
         <div className="mb-[5vh]">
-          <p className="mb-[2vh] text-theme-light-gray">Answer</p>
-          <p className="text-small-title font-semibold text-theme-green">
-            {rightAnswer.body}
+          <p className="mb-[2vh] text-[15px] font-medium text-theme-light-gray">
+            Answer
           </p>
+          <div className="text-small-title font-semibold text-theme-green">
+            {answerBody}
+          </div>
         </div>
-        <div className="flex flex-1 flex-col rounded-[0.2rem] border border-theme-light-gray text-theme-dark-gray">
-          <b className="border-b border-theme-light-gray px-4 py-3">
-            <p>Explanation</p>
-          </b>
-          <div className="h-[30vh] overflow-y-auto border-b border-theme-light-gray bg-[#f4f4f4] p-4 scrollbar-thin scrollbar-thumb-theme-light-gray scrollbar-thumb-rounded-full">
+        <div className="flex min-h-[456px] flex-1 flex-col rounded-[0.2rem] border border-[#e0e0e0] text-theme-dark-gray">
+          <p className="border-b border-[#e1e1e1] px-4 py-3 text-sm font-semibold text-[#6b6b6b]">
+            Explanation
+          </p>
+          <div className="flex flex-1 flex-col overflow-y-auto bg-[#f7f7f7] p-4 scrollbar-thin scrollbar-thumb-theme-light-gray scrollbar-thumb-rounded-none 2xs:block">
             {/* <p>{question.explanation}</p> */}
             {question.featured_image && (
               <button
-                className="top-0 float-right mb-4 ml-4 mt-2 mr-2 h-36 transition hover:scale-105 hover:brightness-90"
-                onClick={() => setShowImageModal(true)}
+                className="top-0 mb-4 mt-2 h-36 self-center transition shadow-[0px_1px_3px_#e1e1e1] hover:scale-105 hover:brightness-90 2xs:float-right 2xs:ml-4 2xs:mr-2"
+                onClick={() => {
+                  setImage(question.featured_image);
+                  setShowImageModal(true);
+                }}
               >
                 <img
                   alt="featured"
@@ -57,36 +102,41 @@ const ExplanationTab: React.FC<ExplanationTabProps> = ({
                 />
               </button>
             )}
-            <p className="text-justify">{question.explanation}</p>
+            <div
+              className="text-justify text-[13px] leading-[1.7em] text-[#5a5a5a]"
+              dangerouslySetInnerHTML={{ __html: question.explanation || '' }}
+            ></div>
           </div>
-          <div className="flex flex-1 flex-col px-6 py-4">
-            <p className="mb-[2vh]">
-              <b>Additional Information:</b>
-            </p>
-            <div className="flex flex-1 flex-col justify-between">
-              {question.informations.map((information) => (
-                <a
-                  className="flex items-center gap-2 hover:underline"
-                  href={information.hyperlink}
-                  key={information.id}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    alt="information icon"
-                    src={p(getInformationIcon(information.type))}
-                    className="h-5 w-5"
-                  />
-                  <span>{information.name}</span>
-                </a>
-              ))}
+          {question.informations.length > 0 && (
+            <div className="flex flex-col border-t border-[#e0e0e0] px-6 py-4">
+              <p className="mb-5 text-sm font-semibold text-[#898989]">
+                Additional Information:
+              </p>
+              <div className="flex flex-1 flex-col justify-between gap-4 text-[13px]">
+                {question.informations.map((information) => (
+                  <a
+                    className="flex items-center gap-2 text-[#919191] hover:underline"
+                    href={information.hyperlink}
+                    key={information.id}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      alt="information icon"
+                      src={p(getInformationIcon(information.type))}
+                      className="h-4 w-4"
+                    />
+                    <span>{information.name}</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
-      {question.featured_image && (
+      {image && (
         <ImageModal
-          image={question.featured_image}
+          image={image}
           visible={showImageModal}
           hideModal={() => setShowImageModal(false)}
           onClick={(e) => e.stopPropagation()}
